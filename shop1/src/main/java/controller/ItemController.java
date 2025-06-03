@@ -13,10 +13,8 @@ import service.ShopService;
 @Controller
 @RequestMapping("item")
 public class ItemController {
-	
 	@Autowired
 	private ShopService service;
-	
 	@RequestMapping("list")
 	public ModelAndView list() {
 		ModelAndView mav = new ModelAndView();

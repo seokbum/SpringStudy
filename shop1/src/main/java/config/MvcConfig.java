@@ -9,19 +9,17 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-@Configuration
-@ComponentScan(basePackages = {"controller","logic","service","dao"})
-public class MvcConfig implements WebMvcConfigurer {
-	
+@Configuration 
+@ComponentScan(basePackages= {"controller","logic","service","dao"})
+public class MvcConfig implements WebMvcConfigurer{
 	@Bean
-	public HandlerMapping handelMapping() { //요청 url 처리
+	public HandlerMapping handlerMapping() { //url 처리.
 		RequestMappingHandlerMapping hm = new RequestMappingHandlerMapping();
 		hm.setOrder(0);
 		return hm;
 	}
-	
 	@Bean
-	public ViewResolver viewResolver() { // 뷰 결정자.
+	public ViewResolver viewResolver() { //뷰 결정자. 
 		InternalResourceViewResolver vr = new InternalResourceViewResolver();
 		vr.setPrefix("/WEB-INF/view/");
 		vr.setSuffix(".jsp");
