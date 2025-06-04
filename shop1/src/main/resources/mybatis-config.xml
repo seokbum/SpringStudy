@@ -5,6 +5,7 @@
 <configuration>
   <settings>
     <setting name="jdbcTypeForNull" value="VARCHAR"/>
+    <setting name="logImpl" value="STDOUT_LOGGING"/>
   </settings>
   <mappers>
      <package name="dao.mapper"/>

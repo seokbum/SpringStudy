@@ -3,7 +3,7 @@
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
  xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee  
  http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd" >
- 
+ <!-- DispatcherServlet : Spring 환경 설정 서블릿 -->
 
   <display-name>Shop1</display-name>
   <servlet>
@@ -19,6 +19,7 @@
   					 config.DBConfig
   		</param-value>
   	</init-param>
+  	<!-- 웹 어플리케이션 실행(시작하면) 서블릿을 객체화 -->
   	<load-on-startup>1</load-on-startup>
   </servlet>
   
