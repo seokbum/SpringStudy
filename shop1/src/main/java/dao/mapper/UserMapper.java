@@ -31,7 +31,9 @@ public interface UserMapper {
 	@Delete("delete from useraccount where userid = #{value}")
 	void delete(String userid);
 
-	@Update("update useraccount set password = #{chgpass} where userid = #{userid}")
+	@Update("update useraccount "
+			+ "set password = #{chgpass} "
+			+ "where userid = #{userid}")
 	void updatePassword( @Param("chgpass")String chgpass, @Param("userid") String userid);
 
 	@Select("<script>"
