@@ -3,6 +3,7 @@ package service;
 
 
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,5 +23,23 @@ public class UserService {
 	public User selectUser(String userid) {
 		return userdao.selectOne(userid);
 	}
+
+	public void userUpdate(User user) {
+		userdao.update(user);
+	}
+
+	public void userDelete(String userid) {
+		userdao.delete(userid);
+		
+	}
+
+	public void updatePassword(String chgpass, String userid) {
+		userdao.updatePassword(chgpass,userid);
+	}
+
+	public String getSearch(User user) {
+		return userdao.search(user);
+	}
+
 	
 }

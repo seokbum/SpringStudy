@@ -8,17 +8,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>로그인화면</title>
-<script type="text/javascript">
-function win_open(page) {
-	var op = "width=500, height=350,left=50,top=150";
-	open(page,"",op);
-}
-</script>
+<title>비밀번호 찾기</title>
 </head>
 <body>
-<h2>사용자 로그인</h2>
-<form:form modelAttribute="user" method="post" action="login" name="loginform">
+<h3>비밀번호 찾기</h3>
+<form:form modelAttribute="user" action="pwsearch" method="post">
 	<spring:hasBindErrors name="user">
 		<font color="red">
 			<c:forEach items="${errors.globalErrors}" var="error">
@@ -28,23 +22,29 @@ function win_open(page) {
 	</spring:hasBindErrors>
 	<table>
 		<tr>
-			<td>아이디</td>
-			<td><form:input path="userid"/>
+			<th>아이디</th>
+			<td>
+				<input type="text" name="userid">
 				<font color="red"><form:errors path="userid"/></font>
 			</td>
 		</tr>
 		<tr>
-			<td>비밀번호</td>
-			<td><form:password path="password"/>
-				<font color="red"><form:errors path="password"/></font>
+			<th>이메일</th>
+			<td>
+				<input type="text" name="email">
+				<font color="red"><form:errors path="email"/></font>
 			</td>
 		</tr>
 		<tr>
-			<td colspan="2" align="center">
-			<input type="submit" value="로그인">
-			<input type="button" value="회원가입" onclick="location.href='join'">
-			<input type="button" value="아이디찾기" onclick="win_open('idsearch')">
-			<input type="button" value="비밀번호찾기" onclick="win_open('pwsearch')">
+			<th>전화번호</th>
+			<td>
+				<input type="text" name="phoneno">
+				<font color="red"><form:errors path="phoneno"/></font>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<input type="submit" value="비밀번호 찾기">
 			</td>
 		</tr>
 	</table>

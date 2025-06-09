@@ -32,6 +32,24 @@ public class UserLoginAspect {
 			throw new ShopException("[idCheck]본인 정보만 거래 가능합니다","../item/list");
 		}
 		
+		
 		return joinPoint.proceed();
 	}
+	@Around
+	   ("execution(* controller.User*.loginCheck*(..)) && args(..,session)")
+	   public Object loginCheck(ProceedingJoinPoint joinPoint,
+	                       HttpSession session
+	                       ) throws Throwable {
+	      
+	      User loginUser = (User) session.getAttribute("loginUser");
+	      
+	      if (loginUser == null || !(loginUser instanceof User)) {
+	         throw new ShopException("[loginCheck]로그인이 필요합니다.", "login");
+	      }
+
+	      return joinPoint.proceed();
+	      
+	   }
+		
+	
 }
