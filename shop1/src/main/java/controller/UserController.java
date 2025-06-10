@@ -1,5 +1,6 @@
 package controller;
 
+import java.util.List;
 import java.util.Random;
 
 import javax.servlet.http.HttpSession;
@@ -18,7 +19,9 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 
 import exception.ShopException;
+import logic.Sale;
 import logic.User;
+import service.ShopService;
 import service.UserService;
 
 @Controller
@@ -31,6 +34,9 @@ public class UserController {
 
 	@Autowired
 	private UserService service;
+	
+	@Autowired
+	private ShopService shopService;
 
     UserController(DataSource dataSource, SimpleMappingExceptionResolver exceptionHandler) {
         this.dataSource = dataSource;
@@ -125,7 +131,10 @@ public class UserController {
 	public ModelAndView idCheckMypage(String userid, HttpSession session) {
 		ModelAndView mav = new ModelAndView();
 		User user = service.selectUser(userid);
+		// Sale : DB 정보 , 사용자 정보(고객정보), 주문상품 정보
+		List<Sale> salelist = shopService.saleList(userid);
 		mav.addObject("user",user);
+		mav.addObject("salelist",salelist);
 		return mav;
 	}
 	
@@ -294,8 +303,11 @@ public class UserController {
 			bresult.reject(code);
 			return mav;
 		}
+		
+		// 아이디 또는 비밀번호를 검색한 경우
 		if(url.equals("pw")) {
 			String newPassword = generateRandomString();
+			// 초기화된 비밀번호로 DB의 비밀번호 변경
 			service.updatePassword(newPassword,user.getUserid());
 			result = newPassword;
 			

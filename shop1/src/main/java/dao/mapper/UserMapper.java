@@ -43,4 +43,7 @@ public interface UserMapper {
 			+ "</script>")
 	String search(Map<String, Object> param);
 
+	@Select("select * from useraccount")
+	List<User> list();
+
 }

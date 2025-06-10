@@ -4,6 +4,8 @@ package service;
 
 
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +41,10 @@ public class UserService {
 
 	public String getSearch(User user) {
 		return userdao.search(user);
+	}
+
+	public List<User> list() {
+		return userdao.list();
 	}
 
 	
