@@ -20,10 +20,10 @@ public class AdminController {
 	private UserService service;
 	
 	@GetMapping("list")
-	public ModelAndView callList(HttpSession session) {
+	public ModelAndView List(HttpSession session) {
 		ModelAndView mav = new ModelAndView("admin/list");
-		List<User> userlist = service.list();
-		mav.addObject("list",userlist);
+		List<User> list = service.list();
+		mav.addObject("list",list);
 		return mav;
 	}
 }
