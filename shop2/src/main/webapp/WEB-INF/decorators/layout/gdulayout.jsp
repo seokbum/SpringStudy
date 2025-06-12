@@ -76,7 +76,7 @@
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link" href="#">홈</a></li>
           <li class="nav-item"><a class="nav-link" href="#">설정</a></li>
-          <a href="${path}/user/logout" class="btn btn-outline-secondary btn-sm">로그아웃</a>
+          <a href="/user/logout" class="btn btn-outline-secondary btn-sm">로그아웃</a>
         </ul>
       </div>
     </div>
@@ -85,9 +85,12 @@
   <!-- 왼쪽 사이드바 -->
   <div id="sidebar" class="sidebar border-end">
     <div class="list-group list-group-flush mt-3">
-      <a href="/admin/dashboard" class="list-group-item list-group-item-action">📊 대시보드</a>
-      <a href="/admin/users" class="list-group-item list-group-item-action">👥 사용자 관리</a>
-      <a href="/admin/settings" class="list-group-item list-group-item-action">⚙️ 설정</a>
+            <a href="/admin/dashboard" class="list-group-item list-group-item-action">📊 대시보드</a>
+			<a href="/admin/users" class="list-group-item list-group-item-action">👥 사용자 관리</a>
+			<a href="/board/list?boardid=1" class="list-group-item list-group-item-action">📌 공지사항</a>
+			<a href="/board/list?boardid=2" class="list-group-item list-group-item-action">💬 자유게시판</a>
+			<a href="/board/list?boardid=3"class="list-group-item list-group-item-action">❓ Q&A</a>
+			<a href="#" class="list-group-item list-group-item-action">⚙ 설정</a>
     </div>
   </div>
 
