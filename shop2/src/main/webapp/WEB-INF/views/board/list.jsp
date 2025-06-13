@@ -192,7 +192,7 @@
         </c:if>
 
         <div class="d-flex justify-content-end mt-3">
-            <a href="write?boardid=${param.boardid}" class="btn btn-success">글쓰기</a>
+            <a href="write?boardid=${boardid}" class="btn btn-success">글쓰기</a>
         </div>
     </div>
 

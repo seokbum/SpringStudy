@@ -13,6 +13,7 @@ import kr.gdu.logic.Board;
 
 @Repository
 public class BoardDao {
+	
 	@Autowired
 	private SqlSessionTemplate template;
 	private Class<BoardMapper> cls = BoardMapper.class;
@@ -24,7 +25,8 @@ public class BoardDao {
 		param.put("searchtype",searchtype);
 		param.put("searchcontent",searchcontent);
 		return template.getMapper(cls).count(param);
-	}	
+	}
+	
 	public List<Board> list	(Integer pageNum, int limit, 
 			String boardid, String searchtype, String searchcontent) {
 		param.clear();
@@ -34,6 +36,30 @@ public class BoardDao {
 		param.put("searchtype",searchtype);
 		param.put("searchcontent",searchcontent);
 		return template.getMapper(cls).select(param);
+	}
+	
+	public Board selectOne(Integer num) {
+		param.clear();
+		param.put("num", num);
+		return template.getMapper(cls).selectOne(num);
+	}
+	
+	public Integer addReadcnt(Integer num) {
+		param.clear();
+		param.put("num", num);
+		return template.getMapper(cls).addReadcnt(param);
+	}
+	
+	public int maxNum() {
+		return template.getMapper(cls).maxNum();
+	}
+	
+	public void insert(Board board) {
+		template.getMapper(cls).insert(board);
+	}
+
+	public void update(Board board) {
+		template.getMapper(cls).update(board);
 	}
 	
 }

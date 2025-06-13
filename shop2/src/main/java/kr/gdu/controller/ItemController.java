@@ -12,12 +12,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import kr.gdu.logic.Item;
 import kr.gdu.service.ShopService;
 
 
 import javax.sql.DataSource;
-import javax.validation.Valid;
+
 
 @Controller // @Componet + Controller 기능
 @RequestMapping("item") 

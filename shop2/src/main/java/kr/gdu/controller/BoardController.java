@@ -2,16 +2,22 @@ package kr.gdu.controller;
 
 import java.util.List;
 import java.util.Map;
-import kr.gdu.service.ShopService;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import kr.gdu.Shop2Application;
+import jakarta.validation.Valid;
+import kr.gdu.exception.ShopException;
 import kr.gdu.logic.Board;
 import kr.gdu.service.BoardService;
 
@@ -47,13 +53,16 @@ public class BoardController {
 			}
 		}
 		
-		if (param.get("pageNum") != null) {
+		if (StringUtils.hasText(param.get("pageNum"))) {
 			   pageNum = Integer.parseInt(param.get("pageNum"));
 		} else { 
 			pageNum = 1;
 		}
 		
 		String boardid = param.get("boardid");
+		if(boardid == null) {
+			boardid = "1";
+		}
 		String searchtype = param.get("searchtype");
 		String searchcontent = param.get("searchcontent");
 		
@@ -63,21 +72,30 @@ public class BoardController {
 		switch(boardid) {
 		   case "1" : boardName = "공지사항"; break;
 		   case "2" : boardName = "자유게시판"; break;
-		   case "3" : boardName = "QNA"; break;
-		   default : boardName = "공지사항";
-		             boardid = "1";
-		   break;
+		   case "3" : boardName = "Q&A"; break;
 		}
 		
 		//게시판 조회 처리
-		int limit = 10;
+		int limit = 10; // 한페이지 출력될 게시물 건수
+		// listcount = boardid 별 전체 게시물 건수. 
 		int listcount = service.boardcount(boardid,searchtype,searchcontent); 
+		//boardlist = 해당 페이지 출력될 게시물 목록
 		List<Board> boardlist = service.boardlist
 				          (pageNum,limit,boardid,searchtype,searchcontent);
-		int maxpage = (int)((double)listcount/limit + 0.95); 
+		
+		// 페이징 처리를 위한 변수
+		// 게시물 건수에 따른 최대 페이지값
+		int maxpage = (int)((double)listcount/limit + 0.95);
+		// startpage : 현재 화면에 보여질 시작 페이지값
 		int startpage = (int)((pageNum/10.0 + 0.9) - 1) * 10 + 1;
+		// endpage : 현재 화면에 보여질 마지막 페이지값
 		int endpage = startpage + 9;
-		if(endpage > maxpage) endpage = maxpage;
+		// 마지막 페이지 값을 최대 페이지보다 클 수없다
+		
+		if(endpage > maxpage) {
+			endpage = maxpage;
+		}
+		// 화면에 보여질 게시물번호
 		int boardno = listcount - (pageNum - 1) * limit;
 		
 		mav.addObject("boardid",boardid);  
@@ -89,6 +107,88 @@ public class BoardController {
 		mav.addObject("listcount", listcount);
 		mav.addObject("boardlist", boardlist);
 		mav.addObject("boardno", boardno);		
+		return mav;
+	}
+	
+	@RequestMapping("detail")
+	public ModelAndView detail(@RequestParam Map<String,String> param) {
+		
+		ModelAndView mav = new ModelAndView();
+		Integer num = Integer.parseInt(param.get("num"));
+		Board board = service.getBoad(num);
+		service.addReadcnt(num);
+		
+		if(board.getBoardid() == null || board.getBoardid().equals("1")) {
+			mav.addObject("boardName", "공지사항");
+		}else if(board.getBoardid().equals("2")){
+			mav.addObject("boardName", "자유게시판");
+		}else if(board.getBoardid().equals("3")) {
+			mav.addObject("boardName", "Q&A");
+		}
+		
+		mav.addObject("board",board);
+		return mav;
+	}
+	
+	@PostMapping("write")
+	public ModelAndView writerPost(@Valid Board board, BindingResult bresult,
+			HttpServletRequest request) {
+		
+		ModelAndView mav = new ModelAndView();
+		
+		if(bresult.hasErrors()) {
+			return mav;
+		}
+		if(StringUtils.hasText(board.getBoardid())) {
+			board.setBoardid("1");
+		}
+		service.boardWrite(board,request);
+		mav.setViewName("redirect:list?boardid="+board.getBoardid());
+		
+		return mav;
+	}
+	
+	@GetMapping({"reply","update","delete"})
+	public ModelAndView getBoard(Integer num, String boardid) {
+		
+		ModelAndView mav = new ModelAndView();
+		Board board = service.getBoad(num);
+		mav.addObject("board", board);
+		
+		if(boardid == null || boardid.equals("1")) {
+			mav.addObject("boardName","공지사항");
+		} else if (boardid.equals("2")) {
+			mav.addObject("boardName", "자유게시판");
+		} else if (boardid.equals("3")) {
+			mav.addObject("boardName", "Q&A");
+		}
+		
+		return mav;
+	}
+	
+	@PostMapping("update")
+	public ModelAndView updetePost(@Valid Board board, BindingResult bresult, 
+			HttpServletRequest request) {
+		ModelAndView mav = new ModelAndView();
+		
+		if(bresult.hasErrors()) {
+			return mav;
+		}
+		Board dbBoard = service.getBoad(board.getNum());
+		
+		if(!board.getPass().equals(dbBoard.getPass())) {
+			throw new ShopException("비밀번호가 틀립니다.", "update?num="+board.getNum()
+				+"&boardid="+dbBoard.getBoardid());
+		}
+		try {
+			service.boardUpdate(board,request);
+			mav.setViewName("redirect:detail?num="+board.getNum());
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ShopException("게시글 수정에 실패 했습니다.", "update?num="+board.getNum()
+				+"&boardid="+dbBoard.getBoardid());
+		}
+		
 		return mav;
 	}
 }

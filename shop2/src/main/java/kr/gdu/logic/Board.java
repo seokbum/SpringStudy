@@ -2,10 +2,9 @@ package kr.gdu.logic;
 
 import java.util.Date;
 
-import javax.validation.constraints.NotEmpty;
-
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 @Data

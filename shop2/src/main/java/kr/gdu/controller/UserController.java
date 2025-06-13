@@ -5,7 +5,7 @@ import java.util.Random;
 
 
 import javax.sql.DataSource;
-import javax.validation.Valid;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,6 +19,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import kr.gdu.exception.ShopException;
 import kr.gdu.logic.Sale;
 import kr.gdu.logic.User;

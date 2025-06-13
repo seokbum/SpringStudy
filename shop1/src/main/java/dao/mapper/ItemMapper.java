@@ -34,6 +34,6 @@ public interface ItemMapper {
 			+ " where id = #{id}")
 	void update(Item item);
 
-	@Delete("delete from item where id = #{id}")
+	@Delete("delete from item where ")
 	void delete(Integer id);
 }
