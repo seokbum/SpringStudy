@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import kr.gdu.dao.BoardDao;
 import kr.gdu.logic.Board;
 
@@ -25,7 +26,7 @@ public class BoardService {
 		return boardDao.list(pageNum,limit,boardid,searchtype,searchcontent);
 	}
 	
-	public Board getBoad(Integer num) {
+	public Board getBoard(Integer num) {
 		return boardDao.selectOne(num);
 	}
 	public Integer addReadcnt(Integer num) {
@@ -76,5 +77,9 @@ public class BoardService {
 		}catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void boardDelete(int num) {
+		boardDao.delete(num);
 	}
 }

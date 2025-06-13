@@ -3,6 +3,7 @@ package kr.gdu.dao.mapper;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -53,6 +54,9 @@ public interface BoardMapper {
     		+ "writer=#{writer},title=#{title},content=#{content},file1=#{fileurl}"
     		+ " where num = #{num}")
 	void update(Board board);
+
+    @Delete("delete from board where num = #{num}")
+    void delete(int num);
 
 	
 }

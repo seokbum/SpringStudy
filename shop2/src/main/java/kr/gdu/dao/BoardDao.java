@@ -61,5 +61,12 @@ public class BoardDao {
 	public void update(Board board) {
 		template.getMapper(cls).update(board);
 	}
+
+
+	public void delete(int num) {
+		template.getMapper(cls).delete(num);
+		
+	}
+
 	
 }

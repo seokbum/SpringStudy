@@ -115,7 +115,7 @@ public class BoardController {
 		
 		ModelAndView mav = new ModelAndView();
 		Integer num = Integer.parseInt(param.get("num"));
-		Board board = service.getBoad(num);
+		Board board = service.getBoard(num);
 		service.addReadcnt(num);
 		
 		if(board.getBoardid() == null || board.getBoardid().equals("1")) {
@@ -152,7 +152,7 @@ public class BoardController {
 	public ModelAndView getBoard(Integer num, String boardid) {
 		
 		ModelAndView mav = new ModelAndView();
-		Board board = service.getBoad(num);
+		Board board = service.getBoard(num);
 		mav.addObject("board", board);
 		
 		if(boardid == null || boardid.equals("1")) {
@@ -174,7 +174,7 @@ public class BoardController {
 		if(bresult.hasErrors()) {
 			return mav;
 		}
-		Board dbBoard = service.getBoad(board.getNum());
+		Board dbBoard = service.getBoard(board.getNum());
 		
 		if(!board.getPass().equals(dbBoard.getPass())) {
 			throw new ShopException("비밀번호가 틀립니다.", "update?num="+board.getNum()
@@ -190,5 +190,30 @@ public class BoardController {
 		}
 		
 		return mav;
+	}
+	
+	@PostMapping("delete")
+	public ModelAndView deletePost(@Valid Board board, BindingResult bresult,
+			HttpServletRequest request) {
+	    ModelAndView mav = new ModelAndView();
+
+	    Board dbBoard = service.getBoard(board.getNum());
+	    
+	    if (!board.getPass().equals(dbBoard.getPass())) {
+	        bresult.reject("error.board.pass");
+	        return mav;
+	    }
+
+	    try {
+	        service.boardDelete(board.getNum());
+	        mav.setViewName("redirect:list?boardid=" + dbBoard.getBoardid());
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        bresult.reject("error.board.delete");
+	        mav.addObject("board", dbBoard); 
+	        return mav;
+	    }
+
+	    return mav;
 	}
 }
