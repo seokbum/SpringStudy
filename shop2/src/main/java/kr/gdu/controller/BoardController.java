@@ -19,13 +19,16 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import kr.gdu.exception.ShopException;
 import kr.gdu.logic.Board;
+import kr.gdu.logic.Comment;
 import kr.gdu.service.BoardService;
 
 @Controller
 @RequestMapping("board")
 public class BoardController {
+
 	@Autowired
 	private BoardService service;
+
 	
 	@GetMapping("*")
 	public ModelAndView write() {
@@ -110,10 +113,10 @@ public class BoardController {
 		return mav;
 	}
 	
-	@RequestMapping("detail")
+	@GetMapping("detail")
 	public ModelAndView detail(@RequestParam Map<String,String> param) {
 		
-		ModelAndView mav = new ModelAndView();
+		ModelAndView mav = new ModelAndView("board/detail");
 		Integer num = Integer.parseInt(param.get("num"));
 		Board board = service.getBoard(num);
 		service.addReadcnt(num);
@@ -126,7 +129,16 @@ public class BoardController {
 			mav.addObject("boardName", "Q&A");
 		}
 		
+		// 댓글 목록 화면에 전달
+		// commlist : num 게시물의 댓글 목록
+		List<Comment> commlist = service.commentlist(num);
+		// 유효성 검증에 필요한 Comment 객체
+		Comment comm = new Comment();
+		comm.setNum(num);
 		mav.addObject("board",board);
+		mav.addObject("commlist",commlist);
+		mav.addObject(comm);
+		
 		return mav;
 	}
 	
@@ -139,7 +151,7 @@ public class BoardController {
 		if(bresult.hasErrors()) {
 			return mav;
 		}
-		if(StringUtils.hasText(board.getBoardid())) {
+		if(!StringUtils.hasText(board.getBoardid())) {
 			board.setBoardid("1");
 		}
 		service.boardWrite(board,request);
@@ -215,5 +227,89 @@ public class BoardController {
 	    }
 
 	    return mav;
+	}
+	/*
+	 * 1. 유효성 검사 하기 - 파마미터 값 저장.
+	 * 	- 원글 정보 : num,grp,grplevel,grpstep,boardid
+	 * 	- 답글 정보 : writer,pass,title,content
+	 * 2. db에 insert => service.boardReply()
+	 * 	- 원글의 grpstep 보다 큰 기종 등록된 답글의 grpstep 값을 +1 수정
+	 * 	=>board.grpStepAdd()
+	 * 	- num : maxNum()+1
+	 *  - db에 insert => boardDao.insert()
+	 *  	grp : 원글과 동일
+	 *  	grplevel : 원글 grplevel+1
+	 *  	grpstep : 원글 grpstep+1
+	 * 	3. 등록성공: list로 페이지 이동
+	 * 	   등록 실패 : "답변 등록시 오류 발생 " reply 페이지 이동
+	 */
+	@PostMapping("reply")
+	public ModelAndView replyPost(@Valid Board board, BindingResult bresult) {
+		ModelAndView mav = new ModelAndView();
+		
+		if(bresult.hasErrors()) {
+			return mav;
+		}
+		
+		try {
+			service.boardReply(board);
+			mav.setViewName("redirect:list?boardid="+board.getBoardid());
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ShopException("답변등록시 오류 발생.", "reply?num="+board.getNum()
+			+"&boardid="+board.getBoardid());
+		}
+		return mav;
+	}
+	
+	@RequestMapping("comment") // 댓글 등록
+	public ModelAndView comment(@Valid Comment comm, BindingResult bresult) {
+		
+		ModelAndView mav = new ModelAndView("board/detail");
+		
+		if(bresult.hasErrors()) {
+			return commdeteil(comm); // 입력 오류시, 정상적으로 조회 되도록 수정
+		}
+		//comment 테이블의 기본값 : num,seq
+		int seq = service.commmaxseq(comm.getNum()); // num 게시글 중 최대 seq 값
+		comm.setSeq(++seq);
+		service.comminsert(comm); //comment 테이블에 추가
+		mav.setViewName("redirect:detail?num="+comm.getNum()+"#comment");
+		return mav;
+	}
+	
+	public ModelAndView commdeteil(Comment comm) {
+		ModelAndView mav = new ModelAndView("board/detail");
+		
+		Board board = service.getBoard(comm.getNum());
+		
+		if(board.getBoardid() == null || board.getBoardid().equals("1")) {
+			mav.addObject("boardName", "공지사항");
+		}else if(board.getBoardid().equals("2")){
+			mav.addObject("boardName", "자유게시판");
+		}else if(board.getBoardid().equals("3")) {
+			mav.addObject("boardName", "Q&A");
+		}
+		List<Comment> commlist = service.commentlist(comm.getNum());
+		comm.setNum(comm.getNum());
+		mav.addObject("board",board);
+		mav.addObject("commlist",commlist);
+		mav.addObject(comm);
+		// ModelAndView mav = detail(?);
+		// mav.addObject(comm);
+		return mav;
+	}
+	@PostMapping("commdel")
+	public String commdel(Comment comm) {
+		
+		Comment dbcomm = service.commSelectOne(comm.getNum(),comm.getSeq());
+		
+		if(comm.getPass().equals(dbcomm.getPass())) {
+			service.commdel(comm.getNum(),comm.getSeq());
+		}else {
+			throw new ShopException("댓글삭제 실패", "detail?num="+comm.getNum()+"#comment");
+		}
+		
+		return "redirect:detail?num="+comm.getNum()+"#comment";
 	}
 }

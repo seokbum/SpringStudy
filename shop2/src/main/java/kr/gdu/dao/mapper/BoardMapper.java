@@ -55,8 +55,16 @@ public interface BoardMapper {
     		+ " where num = #{num}")
 	void update(Board board);
 
-    @Delete("delete from board where num = #{num}")
+    @Delete("delete "
+    		+ "from board "
+    		+ "where num = #{num}")
     void delete(int num);
+
+    @Update("update board "
+    		+ "set grpstep = grpstep + 1 "
+    		+ "where grp = #{grp} "
+    		+ "and grpstep > #{grpstep}")
+	void grpStepAdd(Board board);
 
 	
 }
