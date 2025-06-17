@@ -117,6 +117,12 @@
         <artifactId>commons-lang3</artifactId>
         <version>3.12.0</version> 
       </dependency>
+      <!-- jsoup 설정-->
+      <dependency>
+        <groupId>org.jsoup</groupId>
+        <artifactId>jsoup</artifactId>
+        <version>1.20.1</version> 
+      </dependency>
 	</dependencies>
 
 	<build>

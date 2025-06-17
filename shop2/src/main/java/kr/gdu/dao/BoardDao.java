@@ -71,5 +71,9 @@ public class BoardDao {
 		template.getMapper(cls).grpStepAdd(board);
 	}
 
+	public List<Map<String, Object>> graph1(String id) {
+		return template.getMapper(cls).graph1(id);
+	}
+
 	
 }

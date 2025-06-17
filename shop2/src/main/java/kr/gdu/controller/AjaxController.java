@@ -1,5 +1,10 @@
 package kr.gdu.controller;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +38,45 @@ public class AjaxController {
 	@PostMapping(value = "uploadImage", produces = "text/plain; charset=UTF-8")
 	public String summernoteImageUpload
 	(@RequestParam("image") MultipartFile multipartFile) {
+		//multipartFile
 		return service.summernoteImageUpload(multipartFile);
+	}
+	
+	@RequestMapping(value = "select1",produces = "text/plain; charset=utf-8")
+	public String sidoSelect1(String si, String gu) {
+		return service.sidoSelect1(si,gu);
+	}
+	
+	@RequestMapping("select2")
+	public List<String> sigunSelect2(String si,String gu) {
+		return service.sigunSelect2(si,gu);// 리스트 객체를 클라이언트로 직접 전달
+		// 클라이언트 에서 오류 발생 가능
+		// pom.xml에 fasterxml.jackson... 설정이 필요함.
+		// 현재는 오류 발생 안함 : 자동으로 변형 해줌
+	}
+	
+	@RequestMapping(value = "exchange1", produces = "text/html; charset = utf-8")
+	public String exchange1() {
+		return service.exchange1(); // 미국(달러),중국,일본,유로 4개의 통화만 처리
+	}
+	
+	@RequestMapping("exchange2")
+	public Map<String, Object>exchange2() { //json 데이터로 전송
+		return service.exchange2();
+	}
+	
+	@RequestMapping("graph1")
+	public List<Map.Entry<String, Integer>> graph1(String id) {
+		Map<String, Integer> map = service.graph1(id);
+		List<Map.Entry<String, Integer>> list = new ArrayList<>();
+		for(Map.Entry<String, Integer> m : map.entrySet()) {
+			list.add(m);
+		}
+		Collections.sort(list,(m1,m2)-> m2.getValue() - m1.getValue());
+		return list;
+	}
+	@RequestMapping("LogoImg")
+	public Map<String, Object> LogoImg() {
+		return service.LogoImg();
 	}
 }

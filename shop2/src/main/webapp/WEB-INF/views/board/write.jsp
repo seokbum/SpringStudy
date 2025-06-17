@@ -11,25 +11,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>게시글 작성</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <%-- Bootstrap CSS는 레이아웃에 있으니, 여기서는 Bootstrap Icons만 추가합니다. --%>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.21/dist/summernote-bs5.min.css" rel="stylesheet">
-
+    
     <style>
-        /* Summernote 드롭다운 및 스타일 충돌 해결 */
+        /* Summernote 드롭다운 및 스타일 충돌 해결. 이 스타일은 최종 HTML <head>에 삽입됩니다. */
         .note-editable {
             font-family: inherit !important;
             font-size: inherit !important;
         }
         .note-dropdown-menu {
-            z-index: 1050 !important; /* Bootstrap 5 드롭다운 메뉴와 충돌 방지 */
+            z-index: 1050 !important;
             min-width: 150px !important;
         }
         .note-fontsize .note-dropdown-menu a {
-            font-size: inherit !important; /* 글자 크기 드롭다운 항목 스타일 유지 */
+            font-size: inherit !important;
         }
         .note-fontname .note-dropdown-menu a {
-            font-family: inherit !important; /* 폰트 드롭다운 항목 스타일 유지 */
+            font-family: inherit !important;
         }
     </style>
 </head>
@@ -40,11 +39,6 @@
         <h2 class="mb-4">게시글 작성</h2>
 
         <form:form modelAttribute="board" action="write?boardid=${param.boardid}" enctype="multipart/form-data" name="f">
-            <%--
-            바로 이 부분에 있던 <input type="hidden" name="boardid" ...> 태그가 삭제되었습니다.
-            boardid는 form 태그의 action 속성을 통해 한 번만 전송됩니다.
-            --%>
-
             <div class="mb-3">
                 <form:label path="writer" class="form-label">글쓴이</form:label>
                 <form:input path="writer" class="form-control" placeholder="작성자 이름을 입력하세요"/>
@@ -95,33 +89,24 @@
         </form:form>
     </div>
 
+    <%-- Summernote 작동을 위해 필요한 JavaScript 라이브러리를 이곳에 다시 포함합니다. --%>
+    <%-- 레이아웃에서도 로드되지만, SiteMesh 환경의 특성상 이렇게 해야 오류를 피할 수 있습니다. --%>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.21/dist/summernote-bs5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.js"></script>
 
     <script type="text/javascript">
-        $(function() {
+        $(document).ready(function() {
             $('#summernote').summernote({
                 height: 300,
                 lang: "ko-KR",
                 placeholder: '여기에 내용을 입력하세요...',
-                dialogsInBody: true, // Bootstrap 5 모달 호환성
+                dialogsInBody: true,
                 fontNames: ['Arial', 'Arial Black', 'Comic Sans MS', 'Courier New', 'Helvetica', 'Merriweather'],
-                fontNamesIgnoreCheck: ['Merriweather'], // 웹 폰트 로딩 문제 방지
-                fontSizes: ['8', '10', '12', '14', '16', '18', '24', '36'], // 글자 크기 옵션
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'italic', 'underline', 'clear']],
-                    ['fontname', ['fontname']],
-                    ['fontsize', ['fontsize']],
-                    ['color', ['color']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['table', ['table']],
-                    ['insert', ['link', 'picture', 'video']],
-                    ['view', ['fullscreen', 'codeview', 'help']]
-                ],
+                fontNamesIgnoreCheck: ['Merriweather'],
+                fontSizes: ['8', '10', '12', '14', '16', '18', '24', '36'],
                 callbacks: {
-                    onImageUpload: function(images){
+                    onImageUpload: function(images) {
                         for(let i=0; i < images.length; i++) {
                             sendFile(images[i]);
                         }
@@ -131,20 +116,19 @@
         });
 
         function sendFile(file) {
-            // 파일 업로드를 위한 데이터를 컨테이너 생성
             let data = new FormData();
-            data.append("image", file); // 컨테이너에 이미지 객체 추가
+            data.append("image", file);
 
-            $.ajax({ // ajax을 이용하여 파일 업로드
-                url: "/ajax/uploadImage", // 서버 요청 url
-                type: "post", // post 방식으로 요청
-                data: data, // 전송데이터
-                processData: false, // 문자열 전송 아님. 파일 업로드시 사용
-                contentType: false, // 컨텐트 타입 자동 설정 안함, 파일 업로드시 사용
-                success: function(src) { // 서버응답 완료, 정상처리
+            $.ajax({
+                url: "/ajax/uploadImage",
+                type: "post",
+                data: data,
+                processData: false,
+                contentType: false,
+                success: function(src) {
                     $("#summernote").summernote("insertImage", src);
                 },
-                error: function(e) { // 서버 응답오류
+                error: function(e) {
                     alert("이미지 업로드에 실패했습니다: " + e.status);
                 }
             });

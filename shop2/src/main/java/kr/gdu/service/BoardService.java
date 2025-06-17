@@ -1,12 +1,24 @@
 package kr.gdu.service;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.jsoup.Jsoup; 
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import jakarta.servlet.http.HttpServletRequest;
 import kr.gdu.dao.BoardDao;
@@ -96,9 +108,9 @@ public class BoardService {
 		int max = boardDao.maxNum(); // 최대 num 조회
 		board.setNum(++max); // 원글의 num => 답변글의 num 값으로 변경
 							 // 원글의 grp => 답변글의 grp 값을 동일. 필요없음
-  							 // 원글의 boardid => 답변글의 boardid 값을 동일
-		board.setGrplevel(board.getGrplevel()+1); // 원글의 grplevel => 답변글의 1+grplevel 
-		board.setGrpstep(board.getGrpstep()+1); // 원글의 grpstep => 답변글의 1+grpstep 
+						     // 원글의 boardid => 답변글의 boardid 값을 동일
+		board.setGrplevel(board.getGrplevel()+1); // 원글의 grplevel => 답변글의 1+grplevel 
+		board.setGrpstep(board.getGrpstep()+1); // 원글의 grpstep => 답변글의 1+grpstep 
 		boardDao.insert(board);
 		
 		
@@ -138,4 +150,172 @@ public class BoardService {
 		}
 		return "/board/image/" + filesystemName;
 	}
+
+	public String sidoSelect1(String si, String gu) {
+		BufferedReader fr = null;
+		String path = UPLOAD_IMAGE_DIR+"data/sido.txt";
+		try {
+			fr = new BufferedReader(new FileReader(path));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		Set<String> set = new LinkedHashSet<>();
+		String data = null;
+		if(si == null && gu ==null) {
+			try {
+				while((data=fr.readLine())!=null) {
+					String[] arr = data.split("\\s+");
+					if(arr.length >=3) {
+						set.add(arr[0].trim());
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+                try { if (fr != null) fr.close(); } catch (IOException e) { e.printStackTrace(); }
+            }
+		}
+		List<String> list = new ArrayList<>(set);
+		return list.toString();
+	}
+
+	public List<String> sigunSelect2(String si, String gu) {
+		BufferedReader fr = null;
+		String path = UPLOAD_IMAGE_DIR+"data/sido.txt";
+		try {
+			fr = new BufferedReader(new FileReader(path));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		Set<String> set = new LinkedHashSet<>();
+		String data = null;
+		if (si != null && !si.trim().isEmpty()) {
+			try {
+				while((data = fr.readLine()) != null) {
+					String[] arr = data.split("\\s+");
+					if(arr.length >= 2 && arr[0].trim().equals(si.trim())) {
+						set.add(arr[1].trim());
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+                try { if (fr != null) fr.close(); } catch (IOException e) { e.printStackTrace(); }
+            }
+		}
+		List<String> list = new ArrayList<>(set);
+		return list;
+	}
+
+	public String exchange1() {
+		Document doc = null;
+		List<List<String>> trlist = new ArrayList<>();
+		String url = "https://www.koreaexim.go.kr/wg/HPHKWG057M01";
+		String exdate = null;
+		try {
+			doc = Jsoup.connect(url).get();
+			Elements trs = doc.select("tr");//tr 태그 목록
+			//조회 기준일 부분 조회
+			exdate = doc.select("p.table-unit").html();
+			for(Element tr : trs) {
+				List<String> tdlist = new ArrayList<>();
+				Elements tds = tr.select("td"); //tr 태그 내부의 td 태그 목록
+				for(Element td : tds) {
+					//td.html() : td 태그의 내용들
+					tdlist.add(td.html()); // [USD,미국달러,1350,...,...]
+				}
+				if(tdlist.size() > 0) {
+					if(tdlist.get(0).equals("USD")
+							||tdlist.get(0).equals("CNH") 
+							|| tdlist.get(0).equals("JPY(100)") 
+							|| tdlist.get(0).equals("EUR")) {
+						trlist.add(tdlist);
+						//trlist : USD,CNH,JPY,EUR 통화코드가 속한 데이터만 저장
+					}
+				}
+			}
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append("<h4 class='text-center my-3'>수출입은행<br>"+exdate +"</h4>");
+		sb.append("<table class='table table-bordered table-hover text-center'>"); 
+		sb.append("<thead><tr><th>통화</th><th>기준율</th><th>받으실때</th><th>보내실때</th></tr></thead>"); 
+		sb.append("<tbody>"); 
+		for(List<String> tds : trlist) {
+			sb.append("<tr><td>"+tds.get(0)+"<br>"+tds.get(1)+"</td><td>"+tds.get(4)+"</td>");
+			sb.append("<td>"+tds.get(2)+"</td><td>"+tds.get(3)+"</td></tr>");
+		}
+		sb.append("</tbody>");
+		sb.append("</table>");
+		return sb.toString();
+	}
+
+	public Map<String, Object> exchange2() {
+		Document doc = null;
+		List<List<String>> trlist = new ArrayList<>();
+		String url = "https://www.koreaexim.go.kr/wg/HPHKWG057M01";
+		String exdate = null;
+		try {
+			//DOM
+			doc = Jsoup.connect(url).get();
+			Elements trs = doc.select("tr");//tr 태그 목록
+			//조회 기준일 부분 조회
+			exdate = doc.select("p.table-unit").html();
+			for(Element tr : trs) {
+				List<String> tdlist = new ArrayList<>();
+				Elements tds = tr.select("td"); //tr 태그 내부의 td 태그 목록
+				for(Element td : tds) {
+					//td.html() : td 태그의 내용들
+					tdlist.add(td.html()); // [USD,미국달러,1350,...,...]
+				}
+				if(tdlist.size() > 0) {
+					if(tdlist.get(0).equals("USD")
+							||tdlist.get(0).equals("CNH") 
+							||tdlist.get(0).equals("JPY(100)") 
+							||tdlist.get(0).equals("EUR")) {
+						trlist.add(tdlist);
+						//trlist : USD,CNH,JPY,EUR 통화코드가 속한 데이터만 저장
+					}
+				}
+			}
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
+		Map<String, Object> map = new HashMap<>();
+		map.put("exdate", exdate);
+		map.put("trlist", trlist);
+		return map;
+	}
+
+	public Map<String, Integer> graph1(String id) {
+		List<Map<String, Object>> list = boardDao.graph1(id);
+		Map<String, Integer> map = new HashMap<>();
+		for(Map<String,Object> m : list) {
+			String writer = (String)m.get("writer");
+			long cnt = (Long)m.get("cnt");
+			map.put(writer, (int)cnt);
+		}
+		return map;
+	}
+
+	public Map<String, Object> LogoImg() {
+		Document doc = null;
+		String url = "https://gudi.kr";
+		String logoImageUrl = null;
+		try {
+			doc = Jsoup.connect(url).get();
+			Elements logoElements = doc.select("img.scroll_logo.fixed_transform"); 
+			if(!logoElements.isEmpty()) {
+				Element logo = logoElements.first();
+				logoImageUrl = logo.attr("src");
+			}
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
+		Map<String, Object> map = new HashMap<>();
+		map.put("logoImageUrl", logoImageUrl);
+		return map;
+	}
+
 }

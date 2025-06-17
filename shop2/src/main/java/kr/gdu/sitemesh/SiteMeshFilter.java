@@ -16,6 +16,8 @@ public class SiteMeshFilter extends ConfigurableSiteMeshFilter{
 		.addExcludedPath("/user/idsearch*")
 		.addExcludedPath("/user/login*")
 		.addExcludedPath("/user/join*")
-		.addExcludedPath("/user/pwsearch*");
+		.addExcludedPath("/user/pwsearch*")
+		.addExcludedPath("/ajax*");
+		
 	}
 }
