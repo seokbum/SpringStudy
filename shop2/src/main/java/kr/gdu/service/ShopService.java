@@ -1,9 +1,13 @@
 package kr.gdu.service;
 
 import java.io.File;
+
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,10 +24,10 @@ import kr.gdu.logic.Sale;
 import kr.gdu.logic.SaleItem;
 import kr.gdu.logic.User;
 
-@Service // @Component + Service : 객체화 + 서비스 기능
+@Service
 public class ShopService {
-	
-	@Autowired  // ItemDao 객체를 주입
+
+	@Autowired
 	private ItemDao itemDao;
 	
 	@Autowired
@@ -31,88 +35,100 @@ public class ShopService {
 	
 	@Autowired
 	private SaleItemDao saleItemDao;
-	
+
 	public List<Item> itemList() {
 		return itemDao.list();
 	}
-	
-	public Item getItem(Integer id) {	
-		return itemDao.select(id);
+
+	public Item getItem(Integer id) {
+		return itemDao.getItem(id);
 	}
 
 	public void itemCreate(Item item, HttpServletRequest request) {
-		// item.getPicture() : 업로드 된 파일이 존재. 파일의 내용 저장
-		if(item.getPicture() !=null && !item.getPicture().isEmpty()) {
-			// 업로드 폴더 지정
-			String path = request.getServletContext().getRealPath("/")+"img/";
-			uploadFileCreate(item.getPicture(),path);
+
+		//업로드파일이 존재 시 
+		if(item.getPicture() != null && !item.getPicture().isEmpty()) {
+			//프로젝트의 img폴더 하위에 저장
+			String path =request.getServletContext().getRealPath("/")+"img/";
+			uploadFileCreate(item.getPicture(),path);//폴더에업로드
 			item.setPictureUrl(item.getPicture().getOriginalFilename());
 		}
-		int maxid = itemDao.maxId(); // db에서 id의 최대 값 조회
-		item.setId(maxid +1); 
+
+		int maxid = itemDao.maxId();
+		item.setId(maxid+1); //현재 최대 id에 +1을 해준다.
 		itemDao.insert(item);
 	}
 
-	// 파일 업로드하기 
+
 	private void uploadFileCreate(MultipartFile picture, String path) {
-		String orgFile = picture.getOriginalFilename(); // 원본 파일의 이름
+		String orgFile = picture.getOriginalFilename();//업로드된 파일명
 		File f = new File(path);
 		if(!f.exists()) {
-			f.mkdirs(); // 폴더가 없으면 생성
-		}
+			f.mkdirs();
+		}		
 		try {
-			// picture : 파일의 내용
-			// transferTo : picture 의 내용을 new File(path+orgFile)의 위치로 저장
+			//transferTo 메서드를 호출하여 업로드된 파일을 지정된 경로에 저장
 			picture.transferTo(new File(path+orgFile));
-		} catch (Exception e) {
+		}
+		catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	public void itemUpdate(Item item, HttpServletRequest request) {
+		//업로드파일이 존재 시 
 		if(item.getPicture() != null && !item.getPicture().isEmpty()) {
-			String path = request.getServletContext().getRealPath("/")+"img/";
-			uploadFileCreate(item.getPicture(),path);
+			//프로젝트의 img폴더 하위에 저장
+			String path =request.getServletContext().getRealPath("/")+"img/";
+			uploadFileCreate(item.getPicture(),path);//폴더에업로드
 			item.setPictureUrl(item.getPicture().getOriginalFilename());
 		}
+		
 		itemDao.update(item);
+
 	}
 
-	public void itemDelete(Integer id) {
-		itemDao.delete(id);		
+	public void deleteItem(Integer id) {
+		itemDao.deleteItem(id);
+		
 	}
 
 	public Sale checkend(User loginUser, Cart cart) {
-		int maxsaleid = saleDao.getMaxSaleId(); // 최종 주문 번호 조회
+		int maxSaleid = saleDao.getMaxSaleId(); //가장높은 주문번호 반환
 		Sale sale = new Sale();
-		sale.setSaleid(maxsaleid+1); //최종 주문번호 + 1
-		sale.setUser(loginUser); // 로그인 정보
-		sale.setUserid(loginUser.getUserid()); // db의 userid 값으로 저장
-		saleDao.insert(sale); // sale 테이블에 추가
+		sale.setSaleid(maxSaleid+1);
+		sale.setUser(loginUser);
+		sale.setUserid(loginUser.getUserid());  //세션정보(로그인)인 userid값 저장
+		//sale.setSaledate(new Date()); insert시 now로 고정되어있음
+		saleDao.insert(sale); //sale테이블에 해당객체의정보들 추가
+		
 		int seq = 0;
-		// ItemSet : Item 객체,수량
-		for(ItemSet is : cart.getItemSetList()) {
-			//sale.getSaleid() : 주문 번호
-			//++seq : 주문 상품 번호
-			SaleItem saleItem = new SaleItem(sale.getSaleid(),++seq,is);
-			sale.getItemList().add(saleItem);
+		//ItemSet : item 객체 , 수량이 존재
+		List<ItemSet> itemSetList = cart.getItemSetList();
+		for(ItemSet is : itemSetList) {
+			//++seq : 2개이상 상품 동시 주문시 saleid가 같다. 
+			//seq를 달리해 구분함
+			SaleItem saleItem = new SaleItem(sale.getSaleid(), ++seq, is);
+			sale.getItemList().add(saleItem);//sale의 list에 넣기
 			saleItemDao.insert(saleItem);
 		}
-		return sale; // 주문 정보, 고객 정보, 주문 상품
+		return sale; //sale " 주문정보,고객정보,주문상품 등
 	}
 
 	public List<Sale> saleList(String userid) {
-		// list : Sale 목록, db 정보만 저장
-		List<Sale> list = saleDao.list(userid); // userid 사용자가 주문한 정보 목록 조회
-		for(Sale sa : list) {
-			//	saleItemList : 주문번호에 맞는 주문 상품 목록. db 정보만 조회
+		List<Sale> list = saleDao.saleList(userid);//userid사용자의 주문정보목록
+		System.out.println("list ::: "+list);
+		for (Sale sa : list) {
+			//saleItemList : 주문번호에맞는 주문상품목록
 			List<SaleItem> saleItemList = saleItemDao.list(sa.getSaleid());
-			for(SaleItem si : saleItemList) {
-				Item item = itemDao.select(si.getItemid());// 상품 번호에 해당하는 상품 조회
-				si.setItem(item); // 주문상품(SaleItem)에 상품 정보 저장.
+			System.out.println("saleItemList :::: "+saleItemList);
+			for (SaleItem si : saleItemList) {
+				Item item = itemDao.getItem(si.getItemid());
+				si.setItem(item);
 			}
-			sa.setItemList(saleItemList); // 주문 정보(Sale)에 주문 상품 저장
+			sa.setItemList(saleItemList);
 		}
 		return list;
 	}
+
 }

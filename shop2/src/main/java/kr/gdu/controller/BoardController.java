@@ -1,14 +1,17 @@
 package kr.gdu.controller;
 
 import java.util.List;
+
 import java.util.Map;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,18 +20,29 @@ import org.springframework.web.servlet.ModelAndView;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import kr.gdu.dto.board.BoardDetailDto;
+import kr.gdu.dto.board.DeleteBoardDto;
 import kr.gdu.exception.ShopException;
 import kr.gdu.logic.Board;
 import kr.gdu.logic.Comment;
 import kr.gdu.service.BoardService;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @Controller
 @RequestMapping("board")
 public class BoardController {
 
+    private final ItemController itemController;
+
+    private final UserController userController;
 	@Autowired
 	private BoardService service;
 
+    BoardController(UserController userController, ItemController itemController) {
+        this.userController = userController;
+        this.itemController = itemController;
+    }
 	
 	@GetMapping("*")
 	public ModelAndView write() {
@@ -44,272 +58,236 @@ public class BoardController {
 	 * @RequestParam : 파라미터값을 Map 객체에 매핑하여 전달
 	 */
 	@RequestMapping("list")
-	public ModelAndView list(@RequestParam Map<String,String> param,
-			 HttpSession session) {
-//		System.out.println("param:" + param);
-		
-		Integer pageNum = null;
-		
+	public String list(@RequestParam Map<String,String> param,
+			 HttpSession session,Model model) {
+		int pageNum = 0;
 		for(String key : param.keySet()) {
 			if(param.get(key) == null || param.get(key).trim().equals("")) {
 			   param.put(key, null);	
 			}
 		}
-		
-		if (StringUtils.hasText(param.get("pageNum"))) {
+		if (param.get("pageNum") != null) {
 			   pageNum = Integer.parseInt(param.get("pageNum"));
 		} else { 
 			pageNum = 1;
-		}
-		
+		}			
 		String boardid = param.get("boardid");
-		if(boardid == null) {
-			boardid = "1";
+		//StringUtils.hasText("x") : x가 빈값이면 false
+		if(!StringUtils.hasText(boardid)) {
+			boardid= "1";
 		}
 		String searchtype = param.get("searchtype");
-		String searchcontent = param.get("searchcontent");
-		
-		ModelAndView mav = new ModelAndView();
+		String searchcontent = param.get("searchcontent");		
 		String boardName = null;
-		
 		switch(boardid) {
-		   case "1" : boardName = "공지사항"; break;
-		   case "2" : boardName = "자유게시판"; break;
-		   case "3" : boardName = "Q&A"; break;
+		   case "1" -> boardName = "공지사항";
+		   case "2" -> boardName = "자유게시판"; 
+		   case "3" -> boardName = "QNA";
 		}
-		
 		//게시판 조회 처리
-		int limit = 10; // 한페이지 출력될 게시물 건수
-		// listcount = boardid 별 전체 게시물 건수. 
+		int limit = 10; //한 페이지의 최대게시물
+		//listcount : boardid별 전체 게시물건수
 		int listcount = service.boardcount(boardid,searchtype,searchcontent); 
-		//boardlist = 해당 페이지 출력될 게시물 목록
 		List<Board> boardlist = service.boardlist
 				          (pageNum,limit,boardid,searchtype,searchcontent);
 		
-		// 페이징 처리를 위한 변수
-		// 게시물 건수에 따른 최대 페이지값
+		//페이징 처리를 위한 변수
 		int maxpage = (int)((double)listcount/limit + 0.95);
-		// startpage : 현재 화면에 보여질 시작 페이지값
+		//startpage : 현재 화면에 보여질 시작페이지 1 or 11
 		int startpage = (int)((pageNum/10.0 + 0.9) - 1) * 10 + 1;
-		// endpage : 현재 화면에 보여질 마지막 페이지값
+		//endpage : 현재화면에보여질 마지막 페이지 값 
 		int endpage = startpage + 9;
-		// 마지막 페이지 값을 최대 페이지보다 클 수없다
-		
-		if(endpage > maxpage) {
+		if(endpage > maxpage) { 
 			endpage = maxpage;
 		}
-		// 화면에 보여질 게시물번호
-		int boardno = listcount - (pageNum - 1) * limit;
-		
-		mav.addObject("boardid",boardid);  
-		mav.addObject("boardName", boardName); 
-		mav.addObject("pageNum", pageNum); 
-		mav.addObject("maxpage", maxpage); 
-		mav.addObject("startpage", startpage);
-		mav.addObject("endpage", endpage); 
-		mav.addObject("listcount", listcount);
-		mav.addObject("boardlist", boardlist);
-		mav.addObject("boardno", boardno);		
-		return mav;
+		int boardno = listcount - (pageNum - 1) * limit;		
+		model.addAttribute("boardid",boardid);
+		model.addAttribute("boardName",boardName);
+		model.addAttribute("pageNum",pageNum);
+		model.addAttribute("maxpage",maxpage);//14개의글이있다면 maxpage:2
+		model.addAttribute("startpage",startpage);//기본값 : 1
+		model.addAttribute("endpage",endpage);
+		model.addAttribute("listcount",listcount);
+		model.addAttribute("boardlist",boardlist);
+		model.addAttribute("boardno",boardno);
+		return "board/list";
 	}
 	
 	@GetMapping("detail")
-	public ModelAndView detail(@RequestParam Map<String,String> param) {
-		
-		ModelAndView mav = new ModelAndView("board/detail");
-		Integer num = Integer.parseInt(param.get("num"));
+	public String detail(@RequestParam int num,Model model ) {
 		Board board = service.getBoard(num);
 		service.addReadcnt(num);
 		
-		if(board.getBoardid() == null || board.getBoardid().equals("1")) {
-			mav.addObject("boardName", "공지사항");
-		}else if(board.getBoardid().equals("2")){
-			mav.addObject("boardName", "자유게시판");
-		}else if(board.getBoardid().equals("3")) {
-			mav.addObject("boardName", "Q&A");
+		String boardName = null;
+		String boardid = board.getBoardid();
+		if(boardid==null) {
+			boardid="1";
+		}
+		switch(board.getBoardid()) {		
+		   case "1" -> boardName = "공지사항";
+		   case "2" -> boardName = "자유게시판"; 
+		   case "3" -> boardName = "QNA";
 		}
 		
-		// 댓글 목록 화면에 전달
-		// commlist : num 게시물의 댓글 목록
-		List<Comment> commlist = service.commentlist(num);
-		// 유효성 검증에 필요한 Comment 객체
+		
+		//댓글목록 화면에전달
+		List<Comment> commlist = service.commentList(num);
 		Comment comm = new Comment();
 		comm.setNum(num);
-		mav.addObject("board",board);
-		mav.addObject("commlist",commlist);
-		mav.addObject(comm);
 		
-		return mav;
+		model.addAttribute("board",board);
+		model.addAttribute("boardName",boardName);
+		model.addAttribute("commlist",commlist);
+		model.addAttribute("comment",comm);
+		
+		return "board/detail";
 	}
 	
 	@PostMapping("write")
-	public ModelAndView writerPost(@Valid Board board, BindingResult bresult,
+	public String writePost(@Valid Board board , BindingResult bresult,
 			HttpServletRequest request) {
-		
-		ModelAndView mav = new ModelAndView();
-		
 		if(bresult.hasErrors()) {
-			return mav;
+			// /WEB-INF/views/board/write.jsp 페이지로
+			return "board/write";
 		}
 		if(!StringUtils.hasText(board.getBoardid())) {
 			board.setBoardid("1");
 		}
 		service.boardWrite(board,request);
-		mav.setViewName("redirect:list?boardid="+board.getBoardid());
-		
-		return mav;
+		return "redirect:list?boardid="+board.getBoardid();
 	}
 	
-	@GetMapping({"reply","update","delete"})
-	public ModelAndView getBoard(Integer num, String boardid) {
-		
+	@GetMapping({"update","reply","delete"})
+	public ModelAndView getBoard(@RequestParam int num, @RequestParam String boardid ,Model model) {
 		ModelAndView mav = new ModelAndView();
 		Board board = service.getBoard(num);
-		mav.addObject("board", board);
-		
-		if(boardid == null || boardid.equals("1")) {
+		mav.addObject("board",board);
+		if(boardid==null || boardid.equals("1")) {
 			mav.addObject("boardName","공지사항");
-		} else if (boardid.equals("2")) {
-			mav.addObject("boardName", "자유게시판");
-		} else if (boardid.equals("3")) {
-			mav.addObject("boardName", "Q&A");
 		}
-		
+		else if(boardid.equals("2")) {
+			mav.addObject("boardName","자유게시판");
+		}
+		else if(boardid.equals("3")) {
+			mav.addObject("boardName","Q&A");
+		}
+		mav.addObject("num",num);
+		mav.addObject("boardid",boardid);
 		return mav;
 	}
 	
 	@PostMapping("update")
-	public ModelAndView updetePost(@Valid Board board, BindingResult bresult, 
-			HttpServletRequest request) {
-		ModelAndView mav = new ModelAndView();
-		
+	public String update(@Valid Board board , BindingResult bresult
+			,Model model,HttpServletRequest request) {
 		if(bresult.hasErrors()) {
-			return mav;
+			return "board/update";
 		}
 		Board dbBoard = service.getBoard(board.getNum());
-		
 		if(!board.getPass().equals(dbBoard.getPass())) {
-			throw new ShopException("비밀번호가 틀립니다.", "update?num="+board.getNum()
-				+"&boardid="+dbBoard.getBoardid());
+			throw new ShopException("비밀번호가틀립니다", "update?num="+board.getNum()+
+					"&boardid="+dbBoard.getBoardid());
 		}
+		//입력값 정상+비밀번호일치
 		try {
 			service.boardUpdate(board,request);
-			mav.setViewName("redirect:detail?num="+board.getNum());
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new ShopException("게시글 수정에 실패 했습니다.", "update?num="+board.getNum()
-				+"&boardid="+dbBoard.getBoardid());
+			return "redirect:detail?num="+board.getNum();
 		}
-		
-		return mav;
+		catch (Exception e) {
+			e.printStackTrace();
+			throw new ShopException("업데이트실패", "update?num="+board.getNum()+
+					"&boardid="+dbBoard.getBoardid());
+		}
 	}
 	
 	@PostMapping("delete")
-	public ModelAndView deletePost(@Valid Board board, BindingResult bresult,
-			HttpServletRequest request) {
-	    ModelAndView mav = new ModelAndView();
-
-	    Board dbBoard = service.getBoard(board.getNum());
-	    
-	    if (!board.getPass().equals(dbBoard.getPass())) {
-	        bresult.reject("error.board.pass");
-	        return mav;
-	    }
-
-	    try {
-	        service.boardDelete(board.getNum());
-	        mav.setViewName("redirect:list?boardid=" + dbBoard.getBoardid());
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        bresult.reject("error.board.delete");
-	        mav.addObject("board", dbBoard); 
-	        return mav;
-	    }
-
-	    return mav;
-	}
-	/*
-	 * 1. 유효성 검사 하기 - 파마미터 값 저장.
-	 * 	- 원글 정보 : num,grp,grplevel,grpstep,boardid
-	 * 	- 답글 정보 : writer,pass,title,content
-	 * 2. db에 insert => service.boardReply()
-	 * 	- 원글의 grpstep 보다 큰 기종 등록된 답글의 grpstep 값을 +1 수정
-	 * 	=>board.grpStepAdd()
-	 * 	- num : maxNum()+1
-	 *  - db에 insert => boardDao.insert()
-	 *  	grp : 원글과 동일
-	 *  	grplevel : 원글 grplevel+1
-	 *  	grpstep : 원글 grpstep+1
-	 * 	3. 등록성공: list로 페이지 이동
-	 * 	   등록 실패 : "답변 등록시 오류 발생 " reply 페이지 이동
-	 */
-	@PostMapping("reply")
-	public ModelAndView replyPost(@Valid Board board, BindingResult bresult) {
-		ModelAndView mav = new ModelAndView();
+	public String delete( 
+			@Valid @ModelAttribute DeleteBoardDto dto,BindingResult bresult,Model model) {
 		
-		if(bresult.hasErrors()) {
-			return mav;
+		Board dbBoard = service.getBoard(dto.getNum());
+		if(!dbBoard.getPass().equals(dto.getPass())) {
+			bresult.reject("error.dto.pass");
+			model.addAttribute("num",dto.getNum());
+			model.addAttribute("boardid",dto.getBoardid());
+			return "board/delete";
 		}
 		
+		service.boardDelete(dto);
+		return "redirect:list?boardid="+dbBoard.getBoardid();		
+	}
+	
+	
+	
+	@PostMapping("reply")
+	public String callReply(@Valid Board board, BindingResult bresult,Model model) {
+		System.out.println("board :: "+board);
+		String boardid = board.getBoardid();
+		int num = board.getNum();
+		if(bresult.hasErrors()) {
+			model.addAttribute("num",num);
+			model.addAttribute("boardid",boardid);
+			return "board/reply";	
+		}
 		try {
 			service.boardReply(board);
-			mav.setViewName("redirect:list?boardid="+board.getBoardid());
-		} catch (Exception e) {
+			return "redirect:list?boardid="+boardid;
+		}
+		catch (Exception e) {
 			e.printStackTrace();
-			throw new ShopException("답변등록시 오류 발생.", "reply?num="+board.getNum()
-			+"&boardid="+board.getBoardid());
-		}
-		return mav;
+			model.addAttribute("num",num);
+			model.addAttribute("boardid",boardid);
+			String url = "board/reply";
+			throw new ShopException("오류발생", url);
+			}
 	}
 	
-	@RequestMapping("comment") // 댓글 등록
-	public ModelAndView comment(@Valid Comment comm, BindingResult bresult) {
-		
-		ModelAndView mav = new ModelAndView("board/detail");
-		
+	@PostMapping("comment")
+	public String comment(@Valid @ModelAttribute Comment comm,BindingResult bresult,Model model) {
 		if(bresult.hasErrors()) {
-			return commdeteil(comm); // 입력 오류시, 정상적으로 조회 되도록 수정
+			return commDetail(comm, model);
 		}
-		//comment 테이블의 기본값 : num,seq
-		int seq = service.commmaxseq(comm.getNum()); // num 게시글 중 최대 seq 값
+		//comment테이블의 기본키값 , num,seq
+		int seq = service.comMaxSeq(comm.getNum());
 		comm.setSeq(++seq);
-		service.comminsert(comm); //comment 테이블에 추가
-		mav.setViewName("redirect:detail?num="+comm.getNum()+"#comment");
-		return mav;
+		service.comInsert(comm);
+		return "redirect:detail?num="+comm.getNum()+"#comment";
+		//#comment : id속성값이 comment위치로 시작
 	}
 	
-	public ModelAndView commdeteil(Comment comm) {
-		ModelAndView mav = new ModelAndView("board/detail");
-		
-		Board board = service.getBoard(comm.getNum());
-		
-		if(board.getBoardid() == null || board.getBoardid().equals("1")) {
-			mav.addObject("boardName", "공지사항");
-		}else if(board.getBoardid().equals("2")){
-			mav.addObject("boardName", "자유게시판");
-		}else if(board.getBoardid().equals("3")) {
-			mav.addObject("boardName", "Q&A");
+	private String commDetail(Comment comm,Model model) {
+		int num = comm.getNum();
+		Board board = service.getBoard(num);		
+		String boardName = null;
+		String boardid = board.getBoardid();
+		if(boardid==null) {
+			boardid="1";
 		}
-		List<Comment> commlist = service.commentlist(comm.getNum());
-		comm.setNum(comm.getNum());
-		mav.addObject("board",board);
-		mav.addObject("commlist",commlist);
-		mav.addObject(comm);
-		// ModelAndView mav = detail(?);
-		// mav.addObject(comm);
-		return mav;
+		switch(board.getBoardid()) {		
+		   case "1" -> boardName = "공지사항";
+		   case "2" -> boardName = "자유게시판"; 
+		   case "3" -> boardName = "Q&A";
+		}	
+		//댓글목록 화면에전달
+		List<Comment> commlist = service.commentList(num);
+		comm.setNum(num);
+		
+		model.addAttribute("board",board);
+		model.addAttribute("boardName",boardName);
+		model.addAttribute("commlist",commlist);
+		model.addAttribute("comment",comm);
+		return "board/detail";
 	}
+	
 	@PostMapping("commdel")
-	public String commdel(Comment comm) {
-		
-		Comment dbcomm = service.commSelectOne(comm.getNum(),comm.getSeq());
-		
-		if(comm.getPass().equals(dbcomm.getPass())) {
-			service.commdel(comm.getNum(),comm.getSeq());
-		}else {
-			throw new ShopException("댓글삭제 실패", "detail?num="+comm.getNum()+"#comment");
+	public String comment(@ModelAttribute Comment comm,Model model) {
+		Comment dbComm = service.commSelectOne(comm.getNum(),comm.getSeq());
+		if(comm.getPass().equals(dbComm.getPass())) {
+			service.commDel(comm.getNum(),comm.getSeq());
 		}
-		
+		else {
+			throw new ShopException("댓글삭제실패", "detail?num="+comm.getNum()+"#comment");
+		}
 		return "redirect:detail?num="+comm.getNum()+"#comment";
 	}
+	
+	
 }

@@ -8,16 +8,17 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-@Setter
 @Getter
+@Setter
 @ToString
-public class Sale { // db의 sale 테이블의 내용 + 사용자 정보 + 주문 상품 정보
-
-	private int saleid; // 주문번호
-	private String userid; // 주문 고객 id
-	private Date saledate; // 주문 일자
-	private User user; // 고객정보
-	private List<SaleItem> itemList = new ArrayList<>() ; // 주문상품 목록
+public class Sale { //DB의 sale테이블의 내용 + 사용자정보 + 주문상품정보
+	private int saleid; //주문번호
+	private String userid; //고객아이디
+	private Date saledate; //주문일자
+	private User user; //고객의정보
+	
+	private List<SaleItem> itemList = new ArrayList<>();
+	
 	public int getTotal() {
 		return itemList.stream()
 				.mapToInt(s->s.getItem().getPrice() * s.getQuantity()).sum();

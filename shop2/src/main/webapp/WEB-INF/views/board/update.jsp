@@ -2,143 +2,116 @@
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
-
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>게시글 수정</title>
-    
-    <%-- Bootstrap 5 CSS 및 아이콘 추가 --%>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
-    <%-- Summernote 에디터 CSS 추가 --%>
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.css" rel="stylesheet">
+<meta charset="UTF-8">
+<title>게시글 수정</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+<style type="text/css">
+textarea {
+    resize: vertical;
+}
+</style>
 </head>
-<body>
-    <div class="container mt-5 mb-5">
-        <h2 class="mb-4">게시글 수정</h2>
-
-        <form:form modelAttribute="board" action="update" enctype="multipart/form-data" name="f">
-            <%-- 업데이트에 필요한 숨김 필드 (num, boardid) --%>
-            <form:hidden path="num"/>
-            <form:hidden path="boardid"/>
-            
-            <div class="mb-3">
-                <form:label path="writer" class="form-label">글쓴이</form:label>
-                <form:input path="writer" class="form-control" placeholder="작성자 이름을 입력하세요"/>
-                <div class="text-danger small mt-1">
-                    <form:errors path="writer"/>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <form:label path="pass" class="form-label">비밀번호</form:label>
-                <form:password path="pass" class="form-control" placeholder="비밀번호를 입력하세요"/>
-                <div class="text-danger small mt-1">
-                    <form:errors path="pass"/>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <form:label path="title" class="form-label">제목</form:label>
-                <form:input path="title" class="form-control" placeholder="제목을 입력하세요"/>
-                <div class="text-danger small mt-1">
-                    <form:errors path="title"/>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <form:label path="content" class="form-label">내용</form:label>
-                <form:textarea path="content" rows="10" class="form-control" id="summernote"/>
-                <div class="text-danger small mt-1">
-                    <form:errors path="content"/>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label for="file1" class="form-label">첨부파일</label>
-                
-                <%-- 기존 첨부파일이 있을 경우 표시 --%>
-                <c:if test="${!empty board.fileurl}">
-                    <div id="file_desc" class="mb-2">
-                        <a href="../file/${board.fileurl}">${board.fileurl}</a>
-                        <a href="javascript:file_delete()" class="text-danger ms-2">[첨부파일 삭제]</a>
-                    </div>
-                </c:if>
-                <form:hidden path="fileurl"/>
-                
-                <%-- 새 첨부파일 선택 --%>
-                <input type="file" name="file1" id="file1" class="form-control">
-            </div>
-
-            <hr>
-
-            <div class="d-flex justify-content-between">
-                <a href="list?boardid=${board.boardid}" class="btn btn-secondary">
-                    <i class="bi bi-list-ul"></i> 게시글 목록
-                </a>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-lg"></i> 게시글 수정 완료
-                </button>
-            </div>
-            
-        </form:form>
+<body class="bg-gray-50 font-sans">
+    <div class="container mx-auto p-6 max-w-3xl">
+        <div class="bg-white shadow-sm rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6 text-center">게시글 수정</h2>
+            <form:form modelAttribute="board" action="update"
+                enctype="multipart/form-data" name="f">
+                <form:hidden path="num"/>
+                <form:hidden path="boardid"/>
+                <table class="w-full table-auto border-collapse">
+                    <tr class="border-b">
+                        <td class="p-3 w-1/5 font-medium text-gray-600">글쓴이</td>
+                        <td class="p-3">
+                            <form:input path="writer" class="w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+                            <div class="text-red-500 text-sm mt-1"><form:errors path="writer"/></div>
+                        </td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-medium text-gray-600">비밀번호</td>
+                        <td class="p-3">
+                            <form:password path="pass" class="w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+                            <div class="text-red-500 text-sm mt-1"><form:errors path="pass"/></div>
+                        </td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-medium text-gray-600">제목</td>
+                        <td class="p-3">
+                            <form:input path="title" class="w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+                            <div class="text-red-500 text-sm mt-1"><form:errors path="title"/></div>
+                        </td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-medium text-gray-600">내용</td>
+                        <td class="p-3">
+                            <form:textarea path="content" rows="10" id="summernote" class="w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+                            <div class="text-red-500 text-sm mt-1"><form:errors path="content"/></div>
+                        </td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-medium text-gray-600">첨부파일</td>
+                        <td class="p-3">
+                            <c:if test="${!empty board.fileurl}">
+                                <div id="file_desc" class="flex items-center space-x-2">
+                                    <a href="file/${board.fileurl}" class="text-blue-500 hover:underline">${board.fileurl}</a>
+                                    <a href="javascript:file_delete()" class="text-red-500 hover:underline">[첨부파일 삭제]</a>
+                                </div>
+                            </c:if>
+                            <form:hidden path="fileurl"/>
+                            <input type="file" name="file1" class="mt-2 w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="p-3 text-center space-x-3">
+                            <a href="javascript:document.f.submit()" class="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">게시글 수정</a>
+                            <a href="list" class="inline-block px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition">게시글목록</a>
+                        </td>
+                    </tr>
+                </table>
+            </form:form>
+        </div>
     </div>
-
-    <%-- JavaScript 라이브러리 로드 --%>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/lang/summernote-ko-KR.min.js"></script>
-    
 <script type="text/javascript">
-    // 첨부파일 삭제 기능
-    function file_delete() {
-        // 숨겨진 fileurl input의 값을 비워서 서버에 전달
-        document.f.fileurl.value = "";
-        // 화면에서 파일 정보 숨기기
-        document.getElementById("file_desc").style.display = "none";
-        alert("첨부파일이 삭제되었습니다. '게시글 수정 완료' 버튼을 눌러야 최종 반영됩니다.");
-    }
+function file_delete(){
+    document.f.fileurl.value="";
+    file_desc.style.display = "none";
+}
 
-    // Summernote 에디터 실행 및 이미지 업로드 콜백
-    $(function() {
-        $('#summernote').summernote({
-            height: 300,
-            lang: "ko-KR",
-            placeholder: '여기에 내용을 입력하세요...',
-            callbacks: {
-                onImageUpload: function(images) {
-                    for (let i = 0; i < images.length; i++) {
-                        sendFile(images[i]);
-                    }
-                }
-            }
-        });
-    });
-
-    // Summernote 에디터 내 이미지 업로드 처리 함수
-    function sendFile(file) {
-        let data = new FormData();
-        data.append("image", file);
-        
-        $.ajax({
-            url: "/ajax/uploadImage", // 이미지 업로드를 처리할 컨트롤러 URL
-            type: "post",
-            data: data,
-            processData: false,
-            contentType: false,
-            success: function(src) {
-                $("#summernote").summernote("insertImage", src);
-            },
-            error: function(e) {
-                alert("이미지 업로드에 실패했습니다: " + e.status);
-            }
-        });
-    }
+$(function() {
+	$("#summernote").summernote({
+		height : 300,
+		callbacks:{
+			onImageUpload:function(images){
+				for(let i=0;i<images.length;i++){
+					sendFile(images[i])
+				}
+			}
+		}
+	})
+})
+function sendFile(file){
+	//new FormData() : 파일업로드를 위한 데이터 컨테이너생성
+	let data = new FormData();
+	data.append("image",file); //컨테이너에 이미지객체 추가
+	$.ajax({ //ajax이용해 파일업로드
+		url:"/ajax/uploadImage", //요청URL(ajax컨트롤러)
+		type:"post",
+		data:data, //전송할 데이터:컨테이너
+		processData:false,
+		cache:false,
+		contentType:false,
+		success:function(src){
+			$("#summernote").summernote("insertImage",src);
+		},
+		error:function(e){ //서버응답오류
+			alert("이미지업로드실패 : "+e.status)
+		}			
+	})
+}
 </script>
 </body>
 </html>

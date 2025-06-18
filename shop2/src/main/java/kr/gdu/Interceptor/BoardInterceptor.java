@@ -8,25 +8,38 @@ import jakarta.servlet.http.HttpSession;
 import kr.gdu.exception.ShopException;
 import kr.gdu.logic.User;
 
-public class BoardInterceptor implements HandlerInterceptor{
+public class BoardInterceptor implements HandlerInterceptor {
 
 	@Override
-	public boolean preHandle // /borad/write 요청 시 Controller 보다 먼저 호출됨
-	(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-		
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+			throws Exception {
 		String boardid = request.getParameter("boardid");
-		
 		HttpSession session = request.getSession();
-		
 		User login = (User)session.getAttribute("loginUser");
-		
-		if(boardid == null || boardid.equals("1")) {
-			if(login == null || !login.getUserid().equals("admin")) {
-				String msg = "관리자만 관리 가능합니다.";
+		if(boardid==null || boardid.equals("1")) {
+			//공지사항(boardid=='1')은 관리자만 쓸수있음!!!
+			if(login==null) {
+				String msg = "로그인부터하세요";
+				String url = request.getContextPath()+"/user/login";
+				throw new ShopException(msg, url);	
+			}
+			else if(!login.getUserid().equals("admin")) {
+				String msg = "관리자만 등록가능";
 				String url = request.getContextPath()+"/board/list?boardid=1";
-				throw new ShopException(msg, url);
+				throw new ShopException(msg, url);	
 			}
 		}
-		return true; //정상적인 실행 . BoardController의 메서드 실행
+		//로그인을안하면 자유게시판도 쓸수없게막아야함
+		else if(boardid.equals("2")) {
+			if(login==null) {
+				String msg = "로그인부터하세요";
+				String url = request.getContextPath()+"/user/login";
+				throw new ShopException(msg, url);	
+			}
+		}
+		return true; //BoardCotroller 정상실행
+		
 	}
+
+	
 }

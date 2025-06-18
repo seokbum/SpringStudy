@@ -9,8 +9,8 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 import kr.gdu.sitemesh.SiteMeshFilter;
 
-@ServletComponentScan // 하위 패키지 모두가 Scan 대상
-@SpringBootApplication 
+@SpringBootApplication
+@ServletComponentScan //하위패키지모두를 scan대상으로 삼음
 @EnableAspectJAutoProxy
 public class Shop2Application {
 
@@ -20,10 +20,11 @@ public class Shop2Application {
 	
 	@Bean
 	public FilterRegistrationBean<SiteMeshFilter> siteMeshFilter(){
-		FilterRegistrationBean<SiteMeshFilter> filter =
-		new FilterRegistrationBean<SiteMeshFilter>();
-		
+		FilterRegistrationBean<SiteMeshFilter> filter = 
+		new FilterRegistrationBean<>();
 		filter.setFilter(new SiteMeshFilter());
 		return filter;
 	}
+	
+
 }

@@ -22,11 +22,10 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="minfo-tab" data-bs-toggle="tab" data-bs-target="#minfo-pane" type="button" role="tab" aria-controls="minfo-pane" aria-selected="true">회원정보</button>
         </li>
-        <c:if test="${param.userid != 'admin'}">
+       
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="oinfo-tab" data-bs-toggle="tab" data-bs-target="#oinfo-pane" type="button" role="tab" aria-controls="oinfo-pane" aria-selected="false">주문정보</button>
         </li>
-        </c:if>
     </ul>
 
     <div class="tab-content" id="myPageTabContent">
@@ -53,6 +52,7 @@
                     <c:if test="${loginUser.userid == 'admin'}">
                         <a href="../admin/list" class="btn btn-info btn-sm">회원목록</a>
                     </c:if>
+                    <%---- 회원목록 완성해보기 --%>
                 </div>
                 <div>
                     <a href="../item/list" class="btn btn-success btn-sm">
@@ -75,7 +75,7 @@
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${stat.index}" aria-expanded="false" aria-controls="collapse${stat.index}">
                                 <div class="w-100 d-flex justify-content-between">
                                     <span><strong>주문번호:</strong> ${sale.saleid}</span>
-                                    <span><strong>주문일자:</strong> <fmt:formatDate value="${sale.saledate}" pattern="yyyy-MM-dd HH:mm:ss"/></span>
+                                    <span><strong>주문일자:</strong> <fmt:formatDate value="${sale.saledate}" pattern="yyyy-MM-dd"/></span>
                                     <span class="me-5"><strong>주문금액:</strong> <fmt:formatNumber value="${sale.total}" pattern="###,###"/>원</span>
                                 </div>
                             </button>

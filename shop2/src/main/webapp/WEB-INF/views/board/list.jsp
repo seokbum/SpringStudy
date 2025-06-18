@@ -185,14 +185,14 @@
             </div>
         </c:if>
 
-        <c:if test="${listcount == 0}">
+        <c:if test="${listcount == 0}">1
             <div class="alert alert-info text-center" role="alert">
                 등록된 게시물이 없습니다.
             </div>
         </c:if>
 
         <div class="d-flex justify-content-end mt-3">
-            <a href="write?boardid=${boardid}" class="btn btn-success">글쓰기</a>
+            <a href="write?boardid=${param.boardid}" class="btn btn-success">글쓰기</a>
         </div>
     </div>
 

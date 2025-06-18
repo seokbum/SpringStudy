@@ -47,9 +47,9 @@
                 <c:if test="${!empty board.fileurl}">
                     <hr>
                     <div class="mt-3">
-						<h6 class="card-subtitle text-muted">
-							<i class="bi bi-paperclip"></i> 첨부파일
-						</h6>
+                  <h6 class="card-subtitle text-muted">
+                     <i class="bi bi-paperclip"></i> 첨부파일
+                  </h6>
                         <a href="../file/${board.fileurl}" class="text-decoration-none ms-3 d-block mt-2">
                             ${board.fileurl}
                         </a>
@@ -71,19 +71,20 @@
                 <a href="update?num=${board.num}&boardid=${board.boardid}" class="btn btn-outline-primary me-1">
                     <i class="bi bi-pencil-square"></i> 수정
                 </a>
-                <a href="delete?num=${board.num}&boardid=${board.boardid}" class="btn btn-outline-danger">
+                <a href="delete?num=${board.num}&boardid=${board.boardid}" 
+                class="btn btn-outline-danger">
                     <i class="bi bi-trash3"></i> 삭제
                 </a>
             </div>
         </div>
-        
-        <%-- http://localhost:8080/detail/num=1#comment 요청 --%>
-        <%-- #comment : id 속성의 값이 comment 위치로 스크롤하여 보여줌(#comment 가 fragment) --%>
-        <div id="comment" class="card shadow-sm mt-5">
+        <div class="card shadow-sm mt-5">
             <div class="card-body">
+            <%--#comment주소로 매핑 시 여기로 옴 --%>
+            <span id="comment"></span>
                 <h5 class="card-title mb-4"><i class="bi bi-chat-square-dots-fill"></i> 댓글</h5>
 
                 <%-- 댓글 목록 표시 --%>
+                
                 <div class="comment-list">
                     <c:if test="${empty commlist}">
                         <p class="text-muted">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
@@ -96,14 +97,12 @@
                             <div class="ms-3 w-100">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <span class="fw-bold text-primary me-2">${stat.count}.</span>
                                         <span class="fw-bold">${c.writer}</span>
                                         <small class="text-muted ms-2">
                                             <fmt:formatDate value="${c.regdate}" pattern="yyyy-MM-dd HH:mm:ss E요일"/>
                                         </small>
                                     </div>
                                     <%-- 댓글 삭제 폼 --%>
-                                    <%-- name="commdel${stat.index}" : form 의 이름을 유일하게 만들기 --%>
                                     <form action="commdel" method="post" name="commdel${stat.index}" class="d-flex">
                                         <input type="hidden" name="num" value="${c.num}">
                                         <input type="hidden" name="seq" value="${c.seq}">
