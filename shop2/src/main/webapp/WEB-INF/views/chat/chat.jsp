@@ -1,38 +1,23 @@
-```jsp
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <c:set var="port" value="${pageContext.request.localPort}"/>
 <c:set var="server" value="${pageContext.request.serverName}"/>
 <c:set var="path" value="${pageContext.request.contextPath}"/>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WebSocket Chat</title>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
 <style>
-    body {
-        background: linear-gradient(135deg, #f3e7e9, #d4f1f4);
-        font-family: 'Arial', sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        overflow: hidden;
-    }
     .chat-container {
         background: #fff;
         border-radius: 20px;
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-        width: 90%;
+
+        width: 100%; 
         max-width: 500px;
-        height: 80vh;
+        height: 600px; 
         display: flex;
         flex-direction: column;
         overflow: hidden;
+
+        margin: 20px auto;
     }
     #chatStatus {
         background: #e0e0e0;
@@ -106,38 +91,37 @@
     textarea[name="chatMsg"] {
         display: none;
     }
-    @media (max-width: 400px) {
-        .chat-container {
-            width: 95%;
-            height: 85vh;
-        }
-        .message {
-            max-width: 80%;
-        }
-    }
 </style>
 <script type="text/javascript">
-$(function(){
+// jQuery의 ready 이벤트 핸들러를 사용합니다.
+// 이 스크립트가 DOM에 추가될 때 실행되도록 합니다.
+$(document).ready(function(){
+    // 웹소켓 연결은 문서가 준비되면 바로 시도합니다.
     let ws = new WebSocket("ws://${server}:${port}${path}/chatting");
     let username = "User" + Math.floor(Math.random() * 1000);
-    let sessionId = null;
+    // let sessionId = null; // 이 변수는 현재 코드에서 사용되지 않습니다.
 
+    //서버와 연결 성공된 경우
     ws.onopen = function() {
         $("#chatStatus").text("메시지 💨");
+        // 입력란에 keydown 이벤트등록
         console.log("WebSocket opened for user:", username);
-        // 이벤트 중복 방지
+        // 이벤트 핸들러는 한 번만 등록되도록 off().on() 패턴을 사용합니다.
         $("input[name=chatInput]").off('keydown').on("keydown", function(evt) {
-            if (evt.keyCode == 13) {
+            if (evt.keyCode == 13) { // Enter 키 입력
+				// msg: 입력한 내용 <- sendMessage 호출
                 sendMessage();
+                evt.preventDefault(); // 기본 Enter 키 동작 (줄바꿈) 방지
             }
         });
         $(".send-btn").off('click').on("click", sendMessage);
     };
 
     function sendMessage() {
-        let msg = $("input[name=chatInput]").val().trim();
+        let msg = $("input[name=chatInput]").val().trim(); // 입력칸(input 태그)의 값을 초기화
         if (msg !== "") {
             let payload = JSON.stringify({ username: username, message: msg });
+            
             ws.send(payload);
             console.log("Sent:", payload);
             $("input[name=chatInput]").val("");
@@ -155,6 +139,7 @@ $(function(){
             $msgDiv.addClass('received');
         }
         $(".chat-messages").append($msgDiv);
+        // 메시지가 추가된 후 스크롤을 최하단으로 이동
         $(".chat-messages").scrollTop($(".chat-messages")[0].scrollHeight);
     };
 
@@ -170,8 +155,7 @@ $(function(){
     };
 });
 </script>
-</head>
-<body>
+
 <div class="chat-container">
     <div id="chatStatus"></div>
     <div class="chat-messages"></div>
@@ -181,5 +165,3 @@ $(function(){
     </div>
 </div>
 <textarea name="chatMsg" rows="15" cols="40" class="w3-input" style="display:none;"></textarea>
-</body>
-</html>

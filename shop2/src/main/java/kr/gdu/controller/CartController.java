@@ -1,17 +1,18 @@
 package kr.gdu.controller;
 
-import java.util.List;
+import java.util.HashMap;
+
+import java.util.Map;
 
 
-
-import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
+
 
 import jakarta.servlet.http.HttpSession;
 import kr.gdu.logic.Cart;
@@ -94,5 +95,22 @@ public class CartController {
 		mav.addObject("sale",sale);
 		return mav;
 		
+	}
+	@RequestMapping("kakao")
+	@ResponseBody // 뷰없이 바로 데이터를 클라이언트로 전송
+	public Map<String,Object> kakao(HttpSession session) {
+		Map<String, Object> map = new HashMap<>();
+		Cart cart = (Cart)session.getAttribute("CART");
+		User loginUser = (User)session.getAttribute("loginUser");
+		// merchant_uid : 주문의 고유 아이디
+		map.put("merchant_uid", loginUser.getUserid()+"-"+session.getId());
+		map.put("name", cart.getItemSetList().get(0).getItem().getName()+ "외 "+ (cart.getItemSetList().size()-1));
+		map.put("amount",cart.getTotal()); // 전체 주문 금액
+		map.put("buyer_email", loginUser.getEmail()); // 구매자 이메일
+		map.put("buyer_name", loginUser.getUsername()); // 구매자 이름 
+		map.put("buyer_tel", loginUser.getPhoneno()); // 구매자 번호
+		map.put("buyer_addr", loginUser.getAddress()); // 구매자 주소
+		map.put("buyer_postcode", loginUser.getPostcode()); // 구매자 우편번호
+		return map;
 	}
 }

@@ -1,5 +1,7 @@
 package kr.gdu.controller;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,7 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import kr.gdu.Shop2Application;
 import kr.gdu.service.BoardService;
+import kr.gdu.service.ChatBotService;
+
 /*
  * @Controller : @Component + Controller 기능
  * 		Mapping메서드의 리턴타입 : modelAndView : view이름 + 데이터
@@ -30,10 +35,17 @@ import kr.gdu.service.BoardService;
  */
 @RestController
 @RequestMapping("ajax")
-public class AjaxController {	
+public class AjaxController {
+
+    private final Shop2Application shop2Application;	
 	@Autowired
 	BoardService service;	
-	
+	@Autowired
+	ChatBotService chatService;
+
+    AjaxController(Shop2Application shop2Application) {
+        this.shop2Application = shop2Application;
+    }
 	//produces="text/plain; charset=UTF-8" : 전송될 데이터의 형식
 	@PostMapping(value="uploadImage",produces="text/plain; charset=UTF-8")
 	public String summernoteImageUpload(@RequestParam("image") MultipartFile multipartFile) {
@@ -103,5 +115,16 @@ public class AjaxController {
 			}			
 		});				
 		return list;
+	}
+	@PostMapping("gptquestion")
+	public String qptquestion(String question) {
+		String response = null;
+		try {
+			response = chatService.getChatGPTResponse(question);
+		}catch (URISyntaxException | IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println(response);
+		return response;
 	}
 }

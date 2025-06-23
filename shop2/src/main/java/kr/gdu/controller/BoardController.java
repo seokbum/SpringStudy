@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -20,29 +19,21 @@ import org.springframework.web.servlet.ModelAndView;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import kr.gdu.dto.board.BoardDetailDto;
 import kr.gdu.dto.board.DeleteBoardDto;
 import kr.gdu.exception.ShopException;
 import kr.gdu.logic.Board;
 import kr.gdu.logic.Comment;
 import kr.gdu.service.BoardService;
-import org.springframework.web.bind.annotation.RequestBody;
+
 
 
 @Controller
 @RequestMapping("board")
 public class BoardController {
 
-    private final ItemController itemController;
-
-    private final UserController userController;
 	@Autowired
 	private BoardService service;
 
-    BoardController(UserController userController, ItemController itemController) {
-        this.userController = userController;
-        this.itemController = itemController;
-    }
 	
 	@GetMapping("*")
 	public ModelAndView write() {

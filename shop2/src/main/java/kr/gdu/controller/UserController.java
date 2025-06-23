@@ -1,18 +1,27 @@
 package kr.gdu.controller;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.security.SecureRandom;
 import java.util.ArrayList;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-
 import javax.validation.Valid;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -33,11 +42,13 @@ import kr.gdu.service.UserService;
 @RequestMapping("user")
 public class UserController {
 
+
 	@Autowired
 	private UserService service;
 	
 	@Autowired
 	private ShopService shopService;
+
 
 	@GetMapping("*")
 	public ModelAndView form() {
@@ -82,35 +93,152 @@ public class UserController {
 	 *
 	 * 
 	 */
-
-	@PostMapping("login")
-	public ModelAndView login(User user,BindingResult bresult, HttpSession session) {
-		ModelAndView mav = new ModelAndView();
-		if(user.getUserid().trim().length()<3 
-				|| user.getUserid().trim().length()>10) {
-			//@Valid 어노테이션을 사용하지않고  등록방식으로처리
-			//messages.properties 파일에 : error.required.userid로 등록
-			bresult.rejectValue("userid", "error.required");
+	@GetMapping("login")
+	public String callLogin(HttpSession session,Model model) {
+		String clientId = "네이버의 client ID";
+		clientId = "7QpF5ZIsnvhvX9aZqwYN";
+		String redirectURL = null;
+		try {
+			// 콜백 URL 설정 => 네이버에서 정상처리로 결정되면 호출해주는 URL을 알려줌
+			redirectURL = URLEncoder.encode("http://localhost:8080/user/naverlogin","UTF-8");
+		} catch (Exception e) {
+		e.printStackTrace();
 		}
-		if(user.getPassword().trim().length()<3 
-				|| user.getPassword().trim().length()>10) {
-			bresult.rejectValue("password", "error.required");
-		}
-		User dbUser = service.selectUser(user.getUserid());
-		if(dbUser == null) { //아이디존재X
-			bresult.reject("error.login.id");
-			return mav;
-		}
-		if(user.getPassword().equals(dbUser.getPassword())) { //비밀번호일치
-			session.setAttribute("loginUser", dbUser);
-			//mypage에서 파라미터로넘긴 아이디를 이용해 유저검증 실시
-			mav.setViewName("redirect:mypage?userid=" +user.getUserid());
-		}else {
-			bresult.reject("error.login.password");
-			return mav;
-		}
-		return mav;
+		SecureRandom random = new SecureRandom();
+		// 130 자리의 임의의 큰 정수값.
+		String state = new BigInteger(130,random).toString();
+		
+		String apiURL = "https://nid.naver.com/oauth2.0/authorize?response_type=code";
+		apiURL += "&client_id="+clientId;
+		apiURL += "&redirect_uri="+redirectURL;
+		apiURL += "&state="+state;
+		model.addAttribute(new User());
+		model.addAttribute("apiURL",apiURL);
+		session.getServletContext().setAttribute("session", session);
+		System.out.println("1.session.id="+session.getId());
+		return null;
 	}
+	/*
+	 * 1. /WEB-INF/views/
+	 */
+	
+	@RequestMapping("naverlogin")
+	public String naverLogin(String code,String state,HttpSession session) {
+		System.out.println("2.session.id = "+session.getId());
+		String clientId = "클라이언트ID값"; //애플리케이션 클라이언트ID값
+		clientId = "7QpF5ZIsnvhvX9aZqwYN";
+		String clientSecret = "클라이언트 시크릿값";//애플리케이션 seceret값
+		clientSecret = "2vV8u728M4";
+		String redirectURL = null;
+		try {
+			redirectURL = URLEncoder.encode("YOUR_CALLBACK_URL","UTF-8");
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		String apiURL;
+		apiURL = "https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&";
+		apiURL += "client_id="+clientId;
+		apiURL += "&client_secret="+clientSecret;
+		apiURL += "&redirect_uri="+redirectURL;
+		apiURL += "&code="+code;
+		apiURL += "&state="+state;
+		System.out.println("code="+code+",state="+state);
+//		String access_token="";
+//		String refresh_token = "";
+		StringBuffer res = new StringBuffer();
+	
+		System.out.println("apiURL : "+apiURL);
+		 try {
+		      URL url = new URL(apiURL); // apiURL 연결 성공
+		      HttpURLConnection con = (HttpURLConnection)url.openConnection();
+		      con.setRequestMethod("GET");
+		      // 네이버에서 전달한 응답 코드
+		      int responseCode = con.getResponseCode();
+		      BufferedReader br;
+		      System.out.print("responseCode="+responseCode);
+		      if(responseCode==200) { // 정상 호출
+		        br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		      } else {  // 에러 발생
+		        br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+		      }
+		      String inputLine;
+		     
+		      while ((inputLine = br.readLine()) != null) {
+		        res.append(inputLine);
+		      }
+		      br.close();
+		      if(responseCode==200) {
+		        System.out.println(res.toString());
+		      }
+		    } catch (Exception e) {
+		     e.printStackTrace();
+		    }
+		 //네이버의 응답은 json 형식
+		 //JSON형태의 문자열데이터 -> JSON객체로변경위함
+		JSONParser parser = new JSONParser();
+		JSONObject json = null;
+		try {
+			json = (JSONObject)parser.parse(res.toString());
+			
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		String token = (String)json.get("access_token");
+		String header = "Bearer "+token;
+		try {
+			apiURL = "https://openapi.naver.com/v1/nid/me";
+			URL url = new URL(apiURL);
+			HttpURLConnection con = (HttpURLConnection)url.openConnection();
+			con.setRequestMethod("GET");
+			con.setRequestProperty("Authorization", header);
+			int responseCode = con.getResponseCode();
+			BufferedReader br;
+			res = new StringBuffer();
+			System.out.println("responseCode="+responseCode);
+			if(responseCode ==200) {
+				br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			 }
+			 else {
+				 br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+			 }
+			 String inputLine;
+			 while((inputLine=br.readLine())!=null) {
+				 res.append(inputLine);
+			 }
+			 br.close();
+		 }catch (Exception e) {
+			 e.printStackTrace();
+		 }
+		 try {
+			 json = (JSONObject)parser.parse(res.toString());
+		 }
+		 catch (Exception e) {
+			e.printStackTrace();
+			throw new ShopException("네이버로그인시 오류발생", "login");
+		}
+		 System.out.println("json="+json);
+		 System.out.println("res="+res);
+		  JSONObject jsondetail = (JSONObject)json.get("response");
+		  String email = jsondetail.get("email").toString();
+	        String userid = email.substring(0,email.indexOf("@"));
+	        User user = service.selectUser(userid);
+	        if(user==null) {
+	           user = new User();
+	           //user.setUserid(userid);
+	           user.setUsername(jsondetail.get("name").toString());
+	            String phone = jsondetail.get("mobile").toString();
+	            user.setUserid(email.substring(0,email.indexOf("@")));
+	            user.setEmail(email);
+	            user.setPhoneno(phone);
+	            user.setChannel("naver");
+	            service.userInsert(user);
+	        }
+		  session.setAttribute("loginUser", user);
+		 return "redirect:mypage?userid="+user.getUserid();
+	}
+	
 
 	@GetMapping("mypage")
 	public ModelAndView idCheckMypage(String userid, HttpSession session) {
@@ -123,7 +251,34 @@ public class UserController {
 		mav.addObject("salelist",salelist);
 		return mav;
 	}
-	
+	@PostMapping("login")
+	   public ModelAndView login(User user,BindingResult bresult, HttpSession session) {
+	      ModelAndView mav = new ModelAndView();
+	      if(user.getUserid().trim().length()<3 
+	            || user.getUserid().trim().length()>10) {
+	         //@Valid 어노테이션을 사용하지않고  등록방식으로처리
+	         //messages.properties 파일에 : error.required.userid로 등록
+	         bresult.rejectValue("userid", "error.required");
+	      }
+	      if(user.getPassword().trim().length()<3 
+	            || user.getPassword().trim().length()>10) {
+	         bresult.rejectValue("password", "error.required");
+	      }
+	      User dbUser = service.selectUser(user.getUserid());
+	      if(dbUser == null) { //아이디존재X
+	         bresult.reject("error.login.id");
+	         return mav;
+	      }
+	      if(user.getPassword().equals(dbUser.getPassword())) { //비밀번호일치
+	         session.setAttribute("loginUser", dbUser);
+	         //mypage에서 파라미터로넘긴 아이디를 이용해 유저검증 실시
+	         mav.setViewName("redirect:mypage?userid=" +user.getUserid());
+	      }else {
+	         bresult.reject("error.login.password");
+	         return mav;
+	      }
+	      return mav;
+	   }
 	
 
 	@RequestMapping("logout")
