@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>상품 수정</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #F8F9FA;
+        }
+        .update-form-card {
+            max-width: 700px;
+            margin: 4rem auto;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
+        }
+        .form-group-custom {
+            margin-bottom: 1.5rem;
+        }
+        .form-group-custom label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .image-preview-container {
+            border: 1px solid #DEE2E6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+            background-color: #F1F3F5;
+            margin-top: 1rem;
+        }
+        .image-preview-container img {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card update-form-card">
+        <div class="card-header bg-primary text-white text-center py-3" style="border-radius: 1rem 1rem 0 0;">
+            <h2 class="mb-0">상품 수정</h2>
+        </div>
+        <div class="card-body p-4">
+            <form th:object="${item}" th:action="@{update}" method="post" enctype="multipart/form-data">
+                <input type="hidden" th:field="*{id}"/>
+                <input type="hidden" th:field="*{pictureUrl}"/>
+                <div class="form-group-custom">
+                    <label for="name" class="form-label">상품명</label>
+                    <input type="text" id="name" th:field="*{name}" class="form-control" />
+                    <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger mt-1"></p>
+                </div>
+                <div class="form-group-custom">
+                    <label for="price" class="form-label">상품 가격</label>
+                    <input type="text" id="price" th:field="*{price}" class="form-control" />
+                    <p th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="text-danger mt-1"></p>
+                </div>
+                <div class="form-group-custom">
+                    <label for="picture" class="form-label">상품 이미지</label>
+                    <input type="file" id="picture" name="picture" class="form-control" onchange="previewImage(event)" />
+                    <div class="image-preview-container mt-2">
+                        <p class="mb-2" th:if="${item.pictureUrl == null or item.pictureUrl.isEmpty()}">
+                            기존 이미지 없음
+                        </p>
+                        <img th:if="${item.pictureUrl != null and !item.pictureUrl.isEmpty()}"
+                             th:src="@{'/img/' + ${item.pictureUrl}}"
+                             alt="기존 상품 이미지" id="currentImagePreview" class="img-fluid">
+                        <img id="newImagePreview" src="#" alt="새 이미지 미리보기" style="display:none;">
+                    </div>
+                </div>
+                <div class="form-group-custom">
+                    <label for="description" class="form-label">상품 설명</label>
+                    <textarea id="description" th:field="*{description}" class="form-control" rows="5"></textarea>
+                    <p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger mt-1"></p>
+                </div>
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-edit"></i> 수정 등록
+                    </button>
+                    <button type="button" onclick="location.href='list'" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-list"></i> 상품 목록
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function(){
+            const newImagePreview = document.getElementById('newImagePreview');
+            const currentImagePreview = document.getElementById('currentImagePreview');
+            if (currentImagePreview) {
+                currentImagePreview.style.display = 'none'; // 기존 이미지 숨기기
+            }
+            newImagePreview.src = reader.result;
+            newImagePreview.style.display = 'block'; // 새 이미지 표시
+        };
+        if (event.target.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
+        } else {
+            // 파일 선택이 취소되었을 경우
+            const newImagePreview = document.getElementById('newImagePreview');
+            const currentImagePreview = document.getElementById('currentImagePreview');
+            if (currentImagePreview) {
+                currentImagePreview.style.display = 'block'; // 기존 이미지 다시 표시
+            }
+            newImagePreview.src = '#';
+            newImagePreview.style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>
