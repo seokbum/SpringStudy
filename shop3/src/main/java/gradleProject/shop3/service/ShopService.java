@@ -1,8 +1,6 @@
 package gradleProject.shop3.service;
 
-import gradleProject.shop3.domain.Item;
-import gradleProject.shop3.domain.Sale;
-import gradleProject.shop3.domain.SaleItem;
+import gradleProject.shop3.domain.*;
 import gradleProject.shop3.repository.ItemRepository;
 import gradleProject.shop3.repository.SaleItemRepository;
 import gradleProject.shop3.repository.SaleRepository;
@@ -15,25 +13,25 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.util.List;
 
-@Service 
+
+@Service
 public class ShopService {
 
-	@Autowired  
+	@Autowired
 	private ItemRepository itemRepository;
-
 	@Autowired
 	private SaleRepository saleRepository;
 
-	@Autowired
-	private SaleItemRepository saleItemRepository;
-
 	@Value("C:/Users/user/spring_study/shop3/src/main/resources/static/")
-	private String resouce_dir;
+	private String resourceDir;
+    @Autowired
+    private SaleItemRepository saleItemRepository;
+
 
 	public List<Item> itemList() {
 		return itemRepository.findAll();
 	}
-	
+
 	public Item getItem(Integer id) {
 		return itemRepository.findById(id).get();
 	}
@@ -42,8 +40,11 @@ public class ShopService {
 		// item.getPicture() : 업로드 된 파일이 존재. 파일의 내용 저장
 		if(item.getPicture() !=null && !item.getPicture().isEmpty()) {
 			// 업로드 폴더 지정
-//			String path = request.getServletContext().getRealPath("/")+"img/";
-			String path = resouce_dir + "img/";
+			//String path = request.getServletContext().getRealPath("/")+"img/";
+			String path = resourceDir+"img/";
+
+			System.out.println(path);
+
 			uploadFileCreate(item.getPicture(),path);
 			item.setPictureUrl(item.getPicture().getOriginalFilename());
 		}
@@ -70,8 +71,8 @@ public class ShopService {
 
 	public void itemUpdate(Item item, HttpServletRequest request) {
 		if(item.getPicture() != null && !item.getPicture().isEmpty()) {
-//			String path = request.getServletContext().getRealPath("/")+"img/";
-			String path = resouce_dir + "img/";
+			//String path = request.getServletContext().getRealPath("/")+"img/";
+			String path = resourceDir+"img/";
 			uploadFileCreate(item.getPicture(),path);
 			item.setPictureUrl(item.getPicture().getOriginalFilename());
 		}
@@ -82,41 +83,48 @@ public class ShopService {
 		itemRepository.deleteById(id);
 	}
 
-//	public Sale checkEnd(User loginUser, Cart cart) {
-//		int maxsaleid = saleDao.getMaxSaleId();
-//		Sale sale = new Sale();
-//		sale.setSaleid(maxsaleid + 1);
-//		sale.setUser(loginUser);
-//		sale.setUserid(loginUser.getUserid());
-//
-//		saleDao.insert(sale);
-//		int seq = 0;// 주문상품 번호
-//		for (ItemSet is : cart.getItemSetList()) {
-//			SaleItem saleItem = new SaleItem(sale.getSaleid(), ++seq, is);
-//			sale.getItemList().add(saleItem);
-//			saleItemDao.insert(saleItem);
-//		}
-//
-//		return sale;
-//	}
-//
-public List<Sale> saleList(String userid) {
-	// 오류 수정: JpaRepository 표준 메소드인 findByUserid로 변경
-	List<Sale> list = saleRepository.findByUserid(userid);
+		public Sale checkEnd(User loginUser, Cart cart) {
+		int maxsaleid = saleRepository.getMaxSaleId();
+		Sale sale = new Sale();
+		sale.setSaleid(maxsaleid + 1);
+		sale.setUser(loginUser);
+		sale.setUserid(loginUser.getUserid());
 
-	for (Sale s : list) {
-		// 오류 수정: SaleItemRepository의 findBySaleid를 사용하도록 변경
-		List<SaleItem> saleItemList = saleItemRepository.findBySaleid(s.getSaleid());
-
-		for (SaleItem si : saleItemList) {
-			// 오류 수정: 비표준 select 메소드 대신 findById를 사용하고, 결과가 없을 경우를 대비해 orElse(null) 처리
-			Item item = itemRepository.findById(si.getItemid()).orElse(null);
-			si.setItem(item);
+		saleRepository.save(sale);
+		int seq = 0;// 주문상품 번호
+		for (ItemSet is : cart.getItemSetList()) {
+			SaleItem saleItem = new SaleItem(sale.getSaleid(), ++seq, is);
+			sale.getItemList().add(saleItem);
+			saleItemRepository.save(saleItem);
 		}
-		s.setItemList(saleItemList);
+
+		return sale;
 	}
-	return list;
-}
+
+	public List<Sale> saleList(String userid) {
+
+		// userid 사용자가 주문정보 목록
+		List<Sale> list = saleRepository.saleList(userid);
+		System.out.println("list : "+list);
+
+
+		for (Sale s : list) {//Sale 순회
+			// Sale객체 List<SaleItem>(주문상품모음리스트)에 데이터 할당.
+
+			// 1. saleitem의 saleid가 Sale의 saleid를 참조하므로
+			//    saleid로 saleitem에서 데이터 가져옴
+			List<SaleItem> saleItemList = saleRepository.findById(s.getSaleid()).get().getItemList();
+			System.out.println("saleItemList : "+saleItemList);
+			// 2. 주문상품을 모아둔saleItemList을 순회하며 Item정보를 조회하여 Item데이터 세팅
+			for (SaleItem si : saleItemList) {
+				Item item = itemRepository.findById(si.getItemid()).get();
+				si.setItem(item);
+			}
+			// 3. item정보를 세팅한 리스트를 각 Sale객체에 데이터 세팅
+			s.setItemList(saleItemList);
+		}
+		return list;
+	}
 //
 //	public void exchangeCreate() {
 //		Document doc = null;
@@ -159,28 +167,3 @@ public List<Sale> saleList(String userid) {
 //	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
