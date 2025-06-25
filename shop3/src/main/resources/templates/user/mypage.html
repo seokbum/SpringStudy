@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
+<head>
+    <title th:text="${title} ?: '마이페이지'">마이페이지</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <th:block layout:fragment="css_js_head">
+        <style>
+            .container {
+                max-width: 700px; /* 마이페이지 컨테이너 너비 */
+            }
+
+            /* 마이페이지 탭, 테이블, 아코디언 관련 스타일 */
+            .nav-tabs .nav-link {
+                color: #f1f1f1; /* 탭 글자색 */
+                border-color: transparent;
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            .nav-tabs .nav-link.active {
+                color: white;
+                background-color: rgba(255, 255, 255, 0.15);
+                border-color: rgba(255, 255, 255, 0.18) rgba(255, 255, 255, 0.18) transparent;
+            }
+            .tab-pane {
+                background-color: rgba(255, 255, 255, 0.08); /* 탭 내용 배경 */
+                border-color: rgba(255, 255, 255, 0.18) !important;
+            }
+            .accordion-button {
+                background-color: rgba(255, 255, 255, 0.05); /* 아코디언 버튼 배경 */
+                color: white; /* 아코디언 버튼 글자색 */
+                border: 1px solid rgba(255, 255, 255, 0.18);
+            }
+            .accordion-button:not(.collapsed) {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: white;
+            }
+            .accordion-button:focus {
+                box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+                border-color: rgba(255, 255, 255, 0.25);
+            }
+            .accordion-body {
+                background-color: rgba(255, 255, 255, 0.03); /* 아코디언 내용 배경 */
+                border: 1px solid rgba(255, 255, 255, 0.18);
+                border-top: none;
+            }
+            .table-striped tbody tr:nth-of-type(odd) {
+                background-color: rgba(255, 255, 255, 0.05); /* 스트라이프 테이블 홀수 줄 배경 */
+            }
+            .table-striped tbody tr:nth-of-type(even) {
+                background-color: transparent; /* 스트라이프 테이블 짝수 줄 배경 */
+            }
+            .table-striped thead th {
+                color: #ddd; /* 스트라이프 테이블 헤더 텍스트 */
+            }
+            .alert-warning {
+                background-color: rgba(255, 193, 7, 0.2) !important;
+                border-color: rgba(255, 193, 7, 0.5) !important;
+                color: #ffebcc !important;
+            }
+            /* 테이블 스타일 조정 (카드 배경색이 투명하므로 테이블 요소의 글자색도 흰색으로) */
+            .table-bordered th, .table-bordered td {
+                border-color: rgba(255, 255, 255, 0.18) !important; /* 테이블 테두리 색상 */
+                color: white; /* 테이블 셀 텍스트 색상 */
+            }
+            .table-bordered th {
+                background-color: rgba(255, 255, 255, 0.1) !important; /* 테이블 헤더 배경색 */
+                color: #f1f1f1; /* 테이블 헤더 텍스트 색상 */
+            }
+            /* h2 제목도 흰색으로 (layout.html에서 공통으로 적용되지 않는 경우) */
+            h2.text-white {
+                color: white !important;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="container my-5">
+        <h2 class="mb-4 text-white text-center">마이페이지</h2>
+
+        <ul class="nav nav-tabs" id="myPageTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="minfo-tab" data-bs-toggle="tab" data-bs-target="#minfo-pane" type="button" role="tab" aria-controls="minfo-pane" aria-selected="true">회원정보</button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="oinfo-tab" data-bs-toggle="tab" data-bs-target="#oinfo-pane" type="button" role="tab" aria-controls="oinfo-pane" aria-selected="false">주문정보</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myPageTabContent">
+            <div class="tab-pane fade show active p-4 border border-top-0" id="minfo-pane" role="tabpanel" aria-labelledby="minfo-tab">
+                <table class="table table-bordered">
+                    <tbody>
+                    <tr><th style="width:20%;">아이디</th><td th:text="${user.userid}"></td></tr>
+                    <tr><th>이름</th><td th:text="${user.username}"></td></tr>
+                    <tr><th>우편번호</th><td th:text="${user.postcode}"></td></tr>
+                    <tr><th>전화번호</th><td th:text="${user.phoneno}"></td></tr>
+                    <tr><th>이메일</th><td th:text="${user.email}"></td></tr>
+                    <tr><th>생년월일</th><td th:text="${#dates.format(user.birthday, 'yyyy-MM-dd')}"></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="mt-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <a th:href="@{/user/logout}" class="btn btn-outline-secondary btn-sm">로그아웃</a>
+                        <a th:href="@{/user/update(userid=${user.userid})}" class="btn btn-primary btn-sm">회원정보 수정</a>
+                        <a th:href="@{/user/password}" class="btn btn-secondary btn-sm">비밀번호 수정</a>
+                        <div th:if="${loginUser != null and loginUser.userid != 'admin'}" style="display:inline;">
+                            <a th:href="@{/user/delete(userid=${user.userid})}" class="btn btn-danger btn-sm">회원탈퇴</a>
+                        </div>
+                        <div th:if="${loginUser != null and loginUser.userid == 'admin'}" style="display:inline;">
+                            <a th:href="@{/admin/list}" class="btn btn-info btn-sm">회원목록</a>
+                        </div>
+                    </div>
+                    <div>
+                        <a th:href="@{/item/list}" class="btn btn-success btn-sm">
+                            <i class="bi bi-list-ul"></i> 상품 보기
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade p-3 border border-top-0" id="oinfo-pane" role="tabpanel" aria-labelledby="oinfo-tab">
+                <div class="accordion" id="orderAccordion">
+                    <div th:if="${#lists.isEmpty(salelist)}" class="alert alert-warning text-center" role="alert">
+                        주문 내역이 없습니다.
+                    </div>
+                    <div th:each="sale, stat : ${salelist}" class="accordion-item">
+                        <h2 class="accordion-header" th:id="${'heading' + stat.index}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" th:data-bs-target="${'#collapse' + stat.index}" aria-expanded="false" th:aria-controls="${'collapse' + stat.index}">
+                                <div class="w-100 d-flex justify-content-between">
+                                    <span><strong>주문번호:</strong> <span th:text="${sale.saleid}"></span></span>
+                                    <span><strong>주문일자:</strong> <span th:text="${#dates.format(sale.saledate, 'yyyy-MM-dd')}"></span></span>
+                                    <span class="me-5"><strong>주문금액:</strong> <span th:text="${#numbers.formatDecimal(sale.total, 0, 'COMMA', 0, 'POINT')} + '원'"></span></span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div th:id="${'collapse' + stat.index}" class="accordion-collapse collapse" th:aria-labelledby="${'heading' + stat.index}" data-bs-parent="#orderAccordion">
+                            <div class="accordion-body">
+                                <table class="table table-striped table-sm">
+                                    <thead>
+                                    <tr><th>상품명</th><th>상품가격</th><th>주문수량</th><th>상품총액</th></tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="saleItem : ${sale.itemList}">
+                                        <td th:text="${saleItem.item.name}"></td>
+                                        <td th:text="${#numbers.formatDecimal(saleItem.item.price, 0, 'COMMA', 0, 'POINT')} + '원'"></td>
+                                        <td th:text="${saleItem.quantity}"></td>
+                                        <td th:text="${#numbers.formatDecimal(saleItem.item.price * saleItem.quantity, 0, 'COMMA', 0, 'POINT')} + '원'"></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="css_js_body">
+</th:block>
+
+</body>
+</html>
