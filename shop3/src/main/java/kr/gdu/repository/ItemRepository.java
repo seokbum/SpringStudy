@@ -12,6 +12,8 @@ import kr.gdu.logic.Item;
 	public interface ItemRepository extends JpaRepository<Item, Integer> {
 		
 		//coalesce(JPA)  == ifnull(MySQL)
+		//List<Item> findAll();
+		
 		@Query("select coalesce(max(i.id),0) from Item i ")
 		int findMaxId();
 	}

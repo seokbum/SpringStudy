@@ -77,7 +77,7 @@ public class CountScheduler {
 	 * 		edate varcher(10)	-- 환율 기준일
 	 * )
 	 */
-	@Scheduled(cron = "0 30 10 * * 1,2,3,4,5 ") 
+	@Scheduled(cron = "0 0 11 * * 1,2,3,4,5 ") 
 	public void exchange() {
 		service.exchangeCreate();
 	}

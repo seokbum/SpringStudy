@@ -1,150 +1,110 @@
 package kr.gdu.controller;
 
+
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import kr.gdu.logic.Item;
 import kr.gdu.service.ShopService;
 
 @Controller
-@RequestMapping("item") // http://localhost:8080/shop1/item
+@RequestMapping("item")
 public class ItemController {
-	
-	@Autowired
+
 	private ShopService service;
-	
-	//http://localhost:8080/shop1/item/list 요청 시 호출되는메서드
-	@RequestMapping("list")
-	public String list(Model model) {
-		//ModelAndView : view에 이름과 , 전달데이터를 저장
-		ModelAndView mav = new ModelAndView();
+
+	public ItemController(ShopService service) {
+		this.service = service;
+	}
+
+	@GetMapping("list")
+	public String list(Model model, HttpSession session) {
+
+		// itemList : item 테이블의 모든 정보를 저장 객체
 		List<Item> itemList = service.itemList();
-		model.addAttribute("itemList",itemList);
+		model.addAttribute("itemList", itemList); // view 에 전달할 객체 저장
+		model.addAttribute("title", "상품 목록"); // 레이아웃에 전달할 페이지 제목
+
+		Object loginUser = session.getAttribute("loginUser");
+		if (loginUser != null) {
+			model.addAttribute("loginUser", loginUser);
+		}
 		return "item/list";
 	}
-	@GetMapping({"detail","update","delete"})
-	public ModelAndView getMap(@RequestParam Integer id) {
-		ModelAndView mav = new ModelAndView();
-		Item item = service.getItem(id);
-		mav.addObject("item",item);
-		return mav;
-	}
-	
-	@GetMapping("create") //GET방식
-	public ModelAndView create() {
-		ModelAndView mav = new ModelAndView();
-		mav.addObject(new Item());
-		return mav;
-	}
-	
-	@PostMapping("create")
-	//valid : 유효성검사
-	//BindingResult : error를 담고있는 객체
-	public ModelAndView register(@Valid Item item, BindingResult bresult,
-			HttpServletRequest request) {
-		ModelAndView mav = new ModelAndView();
-		if(bresult.hasErrors()) { //입력값 검증 오류발생 시 
-			return mav;
-		}
-		//정상인경우
-		service.itemCreate(item,request);//DB등록 + 이미지파일업로드
-		mav.setViewName("redirect:list"); //list 재요청
-		return mav;
-	}
-	
-	@PostMapping("update")
-	public ModelAndView postUpdate(@Valid Item item, BindingResult bresult,HttpServletRequest request) {
-		ModelAndView mav = new ModelAndView();
-		if(bresult.hasErrors()) {
-			return mav;
-		}
-		service.itemUpdate(item,request);
-		mav.setViewName("redirect:list"); //list 재요청
-		return mav;
-	}
-	
-	@PostMapping("delete")
-	public ModelAndView postDelete(@RequestParam Integer id) {
-		ModelAndView mav = new ModelAndView();
-		service.deleteItem(id);
-		mav.setViewName("redirect:list"); //list 재요청
-		return mav;
-	}
-	
-	
-	/*
-	//detail,update는 get방식일때 똑같은 메서드를 사용함
+
 	@GetMapping("detail")
-	public ModelAndView detail(@RequestParam Integer id) {
-		ModelAndView mav = new ModelAndView();
+	public String detail(@RequestParam Integer id, Model model) {
 		Item item = service.getItem(id);
-		mav.addObject("item",item);
-		return mav;
+		model.addAttribute("item", item);
+		model.addAttribute("title", item.getName() + " - 상세 보기"); // 레이아웃에 전달할 페이지 제목
+
+		System.err.println("상세보기창.item객체 확인" + item);
+
+		return "item/detail";
 	}
-	
-	@GetMapping("create") //GET방식
-	public ModelAndView create() {
-		ModelAndView mav = new ModelAndView();
-		mav.addObject(new Item());
-		return mav;
-	}
-	@PostMapping("create")
-	//valid : 유효성검사
-	//BindingResult : error를 담고있는 객체
-	public ModelAndView register(@Valid Item item, BindingResult bresult,
-			HttpServletRequest request) {
-		ModelAndView mav = new ModelAndView();
-		if(bresult.hasErrors()) { //입력값 검증 오류발생 시 
-			return mav;
-		}
-		//정상인경우
-		service.itemCreate(item,request);//DB등록 + 이미지파일업로드
-		mav.setViewName("redirect:list"); //list 재요청
-		return mav;
-	}
-	
+
 	@GetMapping("update")
-	public ModelAndView getUpdate(@RequestParam Integer id) {
-		ModelAndView mav = new ModelAndView();
+	public String update(@RequestParam Integer id, Model model) {
 		Item item = service.getItem(id);
-		mav.addObject("item",item);
-		return mav;
+		model.addAttribute("item", item);
+		model.addAttribute("title", item.getName() + " - 수정"); // 레이아웃에 전달할 페이지 제목
+
+		return "item/update";
 	}
-	
-	@PostMapping("update")
-	public ModelAndView postUpdate(@Valid Item item, BindingResult bresult,HttpServletRequest request) {
-		ModelAndView mav = new ModelAndView();
-		if(bresult.hasErrors()) {
-			return mav;
-		}
-		service.itemUpdate(item,request);
-		mav.setViewName("redirect:list"); //list 재요청
-		return mav;
-	}
-	
-	
+
 	@GetMapping("delete")
-	public ModelAndView getDelete(@RequestParam Integer id) {
-		ModelAndView mav = new ModelAndView();
+	public String delete(@RequestParam Integer id, Model model) {
 		Item item = service.getItem(id);
-		mav.addObject("item",item);
-		return mav;
+		model.addAttribute("item", item);
+		model.addAttribute("title", item.getName() + " - 삭제"); // 레이아웃에 전달할 페이지 제목
+
+		return "item/delete";
 	}
-	
-	
-	*/
+
+	@GetMapping("create") //GET 방식 요청
+	public String create(Model model) {
+	 model.addAttribute("item", new Item());
+	 model.addAttribute("title", "상품 등록");
+	 return "item/create";
+	}
+
+	@PostMapping("create") //Post 방식 요청
+	public String register(@Valid Item item, BindingResult bresult,
+						   HttpServletRequest request, Model model) { // Model 추가
+	 if(bresult.hasErrors()) {
+		model.addAttribute("title", "상품 등록 오류"); // 오류 페이지 제목
+		return "item/create";
+	 }
+	 service.itemCreate(item,request);
+	 return "redirect:/item/list"; // 리다이렉트 시에는 컨텍스트 경로 주의 (/item/list)
+	}
+
+	@PostMapping("update")
+	public String update(@Valid Item item, BindingResult bresult,
+		HttpServletRequest request, Model model) { // Model 추가
+	 if(bresult.hasErrors()) {
+		model.addAttribute("title", "상품 수정 오류");
+		return "item/update"; // resources/templates/item/update.html
+	 }
+	 service.itemUpdate(item,request);
+	 return "redirect:/item/list";
+	}
+
+	@PostMapping("delete")
+	public String delete(@RequestParam Integer id) {
+	 service.itemDelete(id);
+	 return "redirect:/item/list";
+	}
+
 
 }

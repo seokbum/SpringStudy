@@ -106,18 +106,9 @@ public class ShopService {
 		
 	}
 
-	@Transactional
-	public void deleteItem(Integer id) {
-		try {
-			itemRepository.deleteById(id);
-			//JpaRepository<Item, Integer>을 상속받아서 존재하는 메서드임 !!!
-			//id를 이용해 entity(객체)를 삭제함	
-		}
-		catch (Exception e) {
-			log.error("delete시 오류 발생"+e);
-			throw new RuntimeException("아이템 삭제 중 오류가 발생했습니다.", e);
-		}
-			
+	public void itemDelete(Integer id) {
+		itemRepository.deleteById(id);
+		
 	}
 	
 	
