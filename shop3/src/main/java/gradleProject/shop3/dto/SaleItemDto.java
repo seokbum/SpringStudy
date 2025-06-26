@@ -1,31 +1,31 @@
-package gradleProject.shop3.domain;
+package gradleProject.shop3.dto;
 
-import jakarta.persistence.*;
+import gradleProject.shop3.domain.Item;
+import gradleProject.shop3.domain.ItemSet;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "saleitem")
-// @IdClass : 키의 클래스. 다중키에서 사용됨
-@IdClass(SaleItemId.class) // 기본키가 복수개 인 경우 필요
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
-public class SaleItem {// 주문상품
+public class SaleItemDto {// 주문상품
 
     @Id
     private int saleid;
-    @Id
     private int seq;
     private int itemid;
     private int quantity;
     @Transient
     private Item item;
 
-    public SaleItem(int saleid, int seq, ItemSet itemSet) {
+    public SaleItemDto(int saleid, int seq, ItemSetDto itemSet) {
         this.saleid = saleid;
         this.seq = seq;
         this.item = itemSet.getItem();

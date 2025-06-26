@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8"/>
+    <title>주문 확인</title>
+    <th:block layout:fragment="css_js_head">
+        <style>
+            .checkout-container { max-width: 800px; margin: 40px auto; }
+            .card-header { font-size: 1.5rem; font-weight: bold; }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container checkout-container">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <i class="bi bi-truck"></i> 배송지 정보
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless" th:if="${loginUser != null}">
+                    <tbody>
+                    <tr>
+                        <th style="width: 20%;">주문자</th>
+                        <td th:text="${loginUser.username}"></td>
+                    </tr>
+                    <tr>
+                        <th>연락처</th>
+                        <td th:text="${loginUser.phoneno}"></td>
+                    </tr>
+                    <tr>
+                        <th>주소</th>
+                        <td th:text="|(${loginUser.postcode}) ${loginUser.address}|"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="page-title">구매 상품</h2>
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <i class="bi bi-cart-check"></i> 주문 상품 목록
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" th:if="${cart != null and not #lists.isEmpty(cart.itemSetList)}">
+                        <thead class="table-dark">
+                        <tr>
+                            <th scope="col" style="width: 50%;">상품명</th>
+                            <th scope="col" class="text-end">가격</th>
+                            <th scope="col" class="text-center">수량</th>
+                            <th scope="col" class="text-end">합계</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="itemSet : ${cart.itemSetList}">
+                            <td th:text="${itemSet.item.name}"></td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(itemSet.item.price, 1, 'COMMA')} + ' 원'"></td>
+                            <td class="text-center" th:text="${itemSet.quantity}"></td>
+                            <td class="text-end" th:text="${#numbers.formatInteger(itemSet.item.price * itemSet.quantity, 1, 'COMMA')} + ' 원'"></td>
+                        </tr>
+                        </tbody>
+                        <tfoot>
+                        <tr class="table-group-divider">
+                            <td colspan="4" class="text-end fs-5 fw-bold p-3">
+                                총 구매 금액:
+                                <span class="text-danger" th:text="${#numbers.formatInteger(cart.total, 1, 'COMMA')} + ' 원'"></span>
+                            </td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a th:href="@{/item/list}" class="btn btn-secondary">
+                    <i class="bi bi-list-ul"></i> 쇼핑 계속하기
+                </a>
+                <a th:href="@{/cart/end}" class="btn btn-success btn-lg" onclick="return confirm('주문을 확정하시겠습니까?');">
+                    <i class="bi bi-check-circle-fill"></i> 주문 확정하기
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

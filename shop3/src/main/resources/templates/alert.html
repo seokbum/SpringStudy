@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>알림</title>
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var message = /*[[${message}]]*/ '기본 메시지';
+    var url = /*[[@{__${url}__}]]*/ '/';
+
+    alert(message);
+    location.href = url;
+    /*]]>*/
+</script>
+</body>
+</html>

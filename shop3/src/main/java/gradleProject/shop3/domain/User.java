@@ -16,15 +16,15 @@ import java.util.Date;
 @Setter
 @ToString
 public class User {
-	@Id
-	private String userid;
-	private String channel;
-	private String password;
-	private String username;
-	private String phoneno;
-	private String postcode;
-	private String address;
-	private String email;
-	private Date birthday;
+    @Id
+    private String userid;
+    private String channel;
+    private String password;
+    private String username;
+    private String phoneno;
+    private String postcode;
+    private String address;
+    private String email;
+    private Date birthday;
 
 }

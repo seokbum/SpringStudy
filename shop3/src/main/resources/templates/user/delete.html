@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}"> <!-- layout/layout.html을 상속받도록 설정 -->
+<head>
+  <!-- th:text="${title}"을 사용하여 Controller에서 넘겨준 title 속성을 페이지 제목으로 사용 -->
+  <title th:text="${title} ?: '회원 탈퇴'">회원 탈퇴</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- 이 페이지에만 특화된 CSS 또는 JS 링크를 추가합니다. -->
+  <th:block layout:fragment="css_js_head">
+    <style>
+      /* 기본적인 폼 및 테이블 스타일을 추가합니다. */
+      .form-container {
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 30px;
+        background-color: rgba(255, 255, 255, 0.9); /* 레이아웃 배경과 어울리도록 투명도 추가 */
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+      }
+      .table th, .table td {
+        vertical-align: middle;
+        text-align: left; /* 테이블 내용은 왼쪽 정렬 */
+        padding: 8px;
+      }
+      .table tr td:first-child {
+        font-weight: bold;
+        width: 100px;
+      }
+      .btn {
+        border-radius: 0.5rem;
+      }
+    </style>
+  </th:block>
+</head>
+<body>
+
+<!-- layout/layout.html의 'content' 프래그먼트에 이 페이지의 주요 내용을 삽입합니다. -->
+<div layout:fragment="content">
+  <div class="form-container">
+    <h2 class="text-center mb-4">회원 탈퇴</h2>
+
+    <!-- 사용자 정보 표시 테이블 -->
+    <table class="table table-bordered table-striped mb-4">
+      <tr>
+        <td>아이디</td>
+        <td th:text="${user.userid}"></td>
+      </tr>
+      <tr>
+        <td>이름</td>
+        <td th:text="${user.username}"></td>
+      </tr>
+      <tr>
+        <td>생년월일</td>
+        <!-- #dates.format을 사용하여 날짜 형식 지정 -->
+        <td th:text="${#dates.format(user.birthday, 'yyyy-MM-dd')}"></td>
+      </tr>
+    </table>
+
+    <!-- 회원 탈퇴 폼 -->
+    <form th:action="@{/user/delete}" method="post" id="deleteForm">
+      <!-- hidden 필드로 userid 전달 -->
+      <input type="hidden" name="userid" th:value="${user.userid}" />
+
+      <div class="mb-3">
+        <label for="password" class="form-label">비밀번호:</label>
+        <input type="password" id="password" name="password" class="form-control" required />
+      </div>
+
+      <div class="d-grid gap-2">
+        <!-- JavaScript submit 대신 버튼 클릭 시 폼 제출 및 확인창 띄우기 -->
+        <button type="submit" class="btn btn-danger btn-lg"
+                onclick="return confirm('정말 탈퇴하시겠습니까?');">
+          <i class="bi bi-person-x-fill"></i> 회원 탈퇴
+        </button>
+        <a th:href="@{/user/mypage(userid=${user.userid})}" class="btn btn-secondary btn-lg">
+          <i class="bi bi-arrow-left-circle-fill"></i> 돌아가기
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 이 블록은 layout/layout.html의 'css_js_body' 프래그먼트에 JS를 삽입합니다. -->
+<th:block layout:fragment="css_js_body">
+  <!-- Bootstrap JS는 layout.html에 이미 포함되어 있으므로 여기서 중복으로 추가하지 않습니다. -->
+</th:block>
+
+</body>
+</html>

@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}"> <head>
-    <title th:text="${title} ?: '상품 목록'">상품 목록</title> <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
+<head>
+    <title th:text="${title} ?: '상품 목록'">상품 목록</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <th:block layout:fragment="css_js_head">
         <style>
@@ -12,9 +14,10 @@
                 margin-bottom: 30px;
             }
             .table {
-                background-color: white;
+                background-color: rgba(255, 255, 255, 0.9); /* 배경 투명도 추가 */
                 border-radius: 8px;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5px); /* 블러 효과 추가 */
             }
             .table-item {
                 table-layout: fixed;
@@ -31,7 +34,7 @@
             .page-title {
                 margin-bottom: 20px;
                 font-weight: bold;
-                color: #343a40;
+                color: #343a40; /* 배경과 잘 어울리도록 색상 조정 */
             }
             .table-item th:nth-child(1), .table-item td:nth-child(1) {
                 width: 10%;
@@ -58,6 +61,19 @@
                 width: 100%;
                 white-space: nowrap;
             }
+            /* 테이블 헤더 및 셀 텍스트 색상 조정 */
+            .table-dark th {
+                color: #f1f1f1; /* 헤더 텍스트 색상 */
+            }
+            .table-item td {
+                color: #343a40; /* 셀 텍스트 색상 */
+            }
+            .table-item .text-primary {
+                color: #0d6efd !important;
+            }
+            .table-item .text-primary:hover {
+                color: #0a58ca !important;
+            }
         </style>
     </th:block>
 </head>
@@ -72,7 +88,8 @@
                 </a>
             </div>
             <div class="d-flex gap-2">
-                <a th:href="@{/user/mypage(userid=${loginUser?.userId})}" class="btn btn-primary btn-custom">
+                <!-- FIX: Changed loginUser?.userId to loginUser?.userid (line 75) -->
+                <a th:href="@{/user/mypage(userid=${loginUser?.userid})}" class="btn btn-primary btn-custom">
                     <i class="bi bi-person"></i> MyPage
                 </a>
                 <a th:href="@{/cart/cartView}" class="btn btn-success btn-custom">

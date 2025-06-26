@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8"/>
+    <title>사용자 정보 수정</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <th:block layout:fragment="css_js_head">
+        <style>
+            /* 이 페이지에만 적용될 최소한의 스타일 */
+            .update-container {
+                max-width: 800px;
+                margin: 40px auto;
+            }
+            .card-header {
+                font-size: 1.5rem;
+                font-weight: bold;
+            }
+            .table th {
+                width: 25%; /* 라벨 컬럼 너비 고정 */
+                background-color: #f8f9fa;
+                vertical-align: middle;
+            }
+            .table td {
+                vertical-align: middle;
+            }
+            .error {
+                color: #dc3545;
+                font-size: 0.875em;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container update-container">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light text-center">
+                사용자 정보 수정
+            </div>
+            <div class="card-body p-4">
+                <form th:object="${userDto}" th:action="@{/user/update}" method="post">
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                        <div th:each="error : ${#fields.globalErrors()}" th:text="${error}"></div>
+                    </div>
+
+                    <table class="table table-bordered">
+                        <tbody>
+                        <tr>
+                            <th><i class="bi bi-person-badge"></i> 아이디</th>
+                            <td>
+                                <input type="text" th:field="*{userid}" class="form-control-plaintext" readonly/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-person-fill"></i> 이름</th>
+                            <td>
+                                <input type="text" th:field="*{username}" class="form-control"/>
+                                <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="error"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-telephone-fill"></i> 전화번호</th>
+                            <td>
+                                <input type="text" th:field="*{phoneno}" class="form-control"/>
+                                <div th:if="${#fields.hasErrors('phoneno')}" th:errors="*{phoneno}" class="error"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-geo-alt-fill"></i> 주소</th>
+                            <td>
+                                <div class="input-group">
+                                    <input type="text" th:field="*{postcode}" class="form-control" placeholder="우편번호" style="max-width: 120px;"/>
+                                    <input type="text" th:field="*{address}" class="form-control" placeholder="상세주소"/>
+                                </div>
+                                <div th:if="${#fields.hasErrors('postcode')}" th:errors="*{postcode}" class="error"></div>
+                                <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="error"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-envelope-fill"></i> 이메일</th>
+                            <td>
+                                <input type="email" th:field="*{email}" class="form-control"/>
+                                <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-calendar-event-fill"></i> 생년월일</th>
+                            <td>
+                                <input type="date" name="birthday" th:value="${userDto.birthday != null ? #dates.format(userDto.birthday, 'yyyy-MM-dd') : ''}" class="form-control"/>
+                                <div th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}" class="error"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-shield-lock-fill"></i> 현재 비밀번호 확인</th>
+                            <td>
+                                <input type="password" name="currentPassword" class="form-control" placeholder="정보 수정을 위해 현재 비밀번호를 입력" required/>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary px-4 me-2"><i class="bi bi-check-circle"></i> 수정완료</button>
+                        <a th:href="@{/user/mypage(userid=${userDto.userid})}" class="btn btn-secondary px-4"><i class="bi bi-arrow-return-left"></i> 돌아가기</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

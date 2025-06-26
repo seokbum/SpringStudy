@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>메일 보내기</title>
+    <th:block layout:fragment="css_js_head">
+        <style>
+            .mail-container { max-width: 900px; margin: 40px auto; }
+            .ck-editor__editable[role="textbox"] {
+                min-height: 300px;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container mail-container">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">메일 보내기</h4>
+            </div>
+            <div class="card-body p-4">
+                <form th:object="${mail}" th:action="@{/admin/mail}" method="post" enctype="multipart/form-data">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="googleid" class="form-label">본인 구글 ID</label>
+                            <input type="text" th:field="*{googleid}" class="form-control" placeholder="example@gmail.com" />
+                            <div th:if="${#fields.hasErrors('googleid')}" th:errors="*{googleid}" class="text-danger small mt-1"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="googlepw" class="form-label">본인 구글 앱 비밀번호</label>
+                            <input type="password" th:field="*{googlepw}" class="form-control" placeholder="구글 2단계 인증 앱 비밀번호" />
+                            <div th:if="${#fields.hasErrors('googlepw')}" th:errors="*{googlepw}" class="text-danger small mt-1"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="recipient" class="form-label">받는 사람</label>
+                        <input type="text" th:field="*{recipient}" class="form-control" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label">제목</label>
+                        <input type="text" th:field="*{title}" class="form-control" />
+                        <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="text-danger small mt-1"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="file1" class="form-label">첨부파일</label>
+                        <input type="file" th:field="*{file1}" id="file1" class="form-control" multiple />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contents" class="form-label">내용</label>
+                        <textarea th:field="*{contents}" id="contents" class="form-control" rows="10"></textarea>
+                        <div th:if="${#fields.hasErrors('contents')}" th:errors="*{contents}" class="text-danger small mt-1"></div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">메일 보내기</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="css_js_body">
+    <script src="https://cdn.ckeditor.com/ckeditor5/34.2.0/super-build/ckeditor.js"></script>
+    <script src="https://ckeditor.com/apps/ckfinder/3.5.0/ckfinder.js"></script>
+
+    <script th:inline="javascript">
+        // 페이지의 모든 컨텐츠가 로드된 후 CKEditor를 실행하도록 보장
+        document.addEventListener('DOMContentLoaded', function() {
+            CKEDITOR.ClassicEditor.create(document.getElementById("contents"), {
+                // 보내주신 JSP의 설정을 그대로 반영
+                ckfinder: {
+                    uploadUrl: /*[[@{/image/upload}]]*/ '/image/upload'
+                },
+                toolbar: {
+                    items: [
+                        'findAndReplace', 'selectAll', '|', 'heading', '|',
+                        'bold', 'italic', 'strikethrough', 'underline', 'code', 'subscript', 'superscript', 'removeFormat', '|',
+                        'bulletedList', 'numberedList', 'todoList', '|', 'outdent', 'indent', '|', 'undo', 'redo', '|',
+                        'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', 'highlight', '|',
+                        'alignment', '|',
+                        'link', 'insertImage', 'blockQuote', 'insertTable', 'mediaEmbed', 'codeBlock', 'htmlEmbed', '|',
+                        'specialCharacters', 'horizontalLine', 'pageBreak', '|', 'sourceEditing'
+                    ],
+                    shouldNotGroupWhenFull: true
+                },
+                placeholder: '메일 내용을 입력해주세요!',
+                removePlugins: [
+                    'ExportPdf','ExportWord','CKBox','CKFinder','EasyImage',
+                    'RealTimeCollaborativeComments','RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
+                    'PresenceList','Comments','TrackChanges','TrackChangesData','RevisionHistory','Pagination','WProofreader','MathType'
+                ]
+            })
+                .then(editor => {
+                    console.log("CKEditor Super-build Initialized Successfully!");
+                })
+                .catch(error => {
+                    console.error("CKEditor Initialization Failed:", error);
+                });
+        });
+    </script>
+</th:block>
+</body>
+</html>

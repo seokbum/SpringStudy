@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>관리자 - 회원 목록</title>
+
+    <th:block layout:fragment="css_js_head">
+        <style>
+
+            .table thead th {
+                background-color: #3498db;
+                color: white;
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 0.9rem;
+                vertical-align: middle;
+            }
+
+            .table tbody td {
+                border-bottom: 1px solid #dee2e6;
+                color: #495057;
+                vertical-align: middle;
+            }
+
+            .action-links a {
+                color: #ffffff;
+                text-decoration: none;
+                font-weight: 500;
+                padding: 0.4rem 0.8rem;
+                border-radius: 6px;
+                margin-right: 0.5rem;
+                display: inline-block;
+            }
+
+            .action-links a.update {
+                background-color: #2ecc71;
+            }
+
+            .action-links a.delete {
+                background-color: #e74c3c;
+            }
+
+            .action-links a.info {
+                background-color: #3498db;
+            }
+
+            .btn-submit {
+                background-color: #2ecc71;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.7rem 1.5rem;
+                font-size: 0.95rem;
+                font-weight: 600;
+            }
+
+            .checkbox-col {
+                text-align: center;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid"><h2 class="mb-4">회원목록</h2>
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/admin/mail}" method="get">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                            <tr>
+                                <th>아이디</th>
+                                <th>이름</th>
+                                <th>전화</th>
+                                <th>생일</th>
+                                <th>이메일</th>
+                                <th>작업</th>
+                                <th class="checkbox-col">
+                                    <input type="checkbox" class="form-check-input" name="allchk"
+                                           onchange="allchkbox(this)">
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="user : ${list}">
+                                <td th:text="${user.userid}"></td>
+                                <td th:text="${user.username}"></td>
+                                <td th:text="${user.phoneno}"></td>
+                                <td th:text="${#dates.format(user.birthday, 'yyyy-MM-dd')}"></td>
+                                <td th:text="${user.email}"></td>
+                                <td class="action-links">
+                                    <a th:href="@{/user/update(userid=${user.userid})}" class="update">수정</a>
+                                    <a th:href="@{/user/delete(userid=${user.userid})}" class="delete">강제탈퇴</a>
+                                    <a th:href="@{/user/mypage(userid=${user.userid})}" class="info">회원정보</a>
+                                </td>
+                                <td class="checkbox-col">
+                                    <input type="checkbox" name="idchks" class="idchks form-check-input"
+                                           th:value="${user.userid}">
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(list)}">
+                                <td colspan="7" class="text-center p-4">등록된 회원이 없습니다.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3" th:if="${not #lists.isEmpty(list)}">
+                        <input type="submit" value="선택된 회원에게 메일보내기" class="btn btn-submit">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="css_js_body">
+    <script type="text/javascript">
+
+        function allchkbox(allchk) {
+            $(".idchks").prop("checked", allchk.checked);
+        }
+    </script>
+</th:block>
+
+</body>
+</html>

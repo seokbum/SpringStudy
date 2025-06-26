@@ -2,19 +2,51 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
 	  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
 <head>
-	<meta charset="UTF-8">
-	<title th:text="${title} ?: '상품 수정'">상품 수정</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta charset="UTF-8"/>
+	<title th:text="${title} ?: '사용자 수정'">사용자 수정</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 	<th:block layout:fragment="css_js_head">
 		<style>
-			#preview {
-				max-width: 200px;
-				max-height: 200px;
-				margin-top: 1rem;
-				border: 1px solid #ccc;
-				border-radius: 5px;
-				object-fit: contain;
+			.form-container {
+				max-width: 600px;
+				margin: 20px auto;
+				padding: 30px;
+				background-color: rgba(255, 255, 255, 0.9);
+				border-radius: 10px;
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+				backdrop-filter: blur(5px);
+			}
+			.form-control {
+				border-radius: 0.5rem;
+			}
+			.btn {
+				border-radius: 0.5rem;
+			}
+			.error-message {
+				color: red;
+				font-size: 0.9em;
+				margin-top: 5px;
+				display: block; /* 오류 메시지가 새로운 줄에 표시되도록 */
+			}
+			.error-global {
+				color: red;
+				font-weight: bold;
+				margin-bottom: 15px;
+				text-align: center;
+			}
+			table {
+				width: 100%;
+				margin-top: 20px;
+			}
+			table td {
+				padding: 10px 0;
+			}
+			table td:first-child {
+				width: 120px; /* 라벨 컬럼 너비 조정 */
+				font-weight: bold;
+				vertical-align: top; /* 라벨이 상단에 정렬되도록 */
+				padding-top: 15px; /* 라벨과 입력 필드 정렬 */
 			}
 		</style>
 	</th:block>
@@ -22,89 +54,95 @@
 <body>
 
 <div layout:fragment="content">
-	<div class="container mt-5">
-		<div class="row justify-content-center">
-			<div class="col-md-8">
-				<div class="card shadow">
-					<div class="card-header bg-primary text-white">
-						<h4 class="mb-0">📝 상품 정보 수정</h4>
-					</div>
-					<div class="card-body">
+	<div class="form-container">
+		<h2 class="text-center mb-4">사용자 수정</h2>
 
-						<form th:object="${item}" th:action="@{/item/update}" method="post" enctype="multipart/form-data">
-							<input type="hidden" th:field="*{id}" />
-							<input type="hidden" th:field="*{pictureUrl}" />
-
-							<div class="mb-3">
-								<label for="name" class="form-label">상품명</label>
-								<input type="text" id="name" th:field="*{name}" class="form-control" />
-								<p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></p>
-							</div>
-
-							<div class="mb-3">
-								<label for="price" class="form-label">상품 가격</label>
-								<input type="number" id="price" th:field="*{price}" class="form-control" />
-								<p th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="text-danger"></p>
-							</div>
-
-							<div class="mb-3">
-								<label for="pictureInput" class="form-label">상품 이미지</label>
-								<input type="file" name="picture" id="pictureInput" class="form-control" accept="image/*" />
-								<img th:if="${not #strings.isEmpty(item.pictureUrl)}"
-									 id="preview"
-									 th:src="@{/img/{pictureUrl}(pictureUrl=${item.pictureUrl})}"
-									 alt="현재 이미지" />
-								<img th:unless="${not #strings.isEmpty(item.pictureUrl)}"
-									 id="preview"
-									 src="#"
-									 alt="미리보기 이미지" class="d-none" />
-							</div>
-
-							<div class="mb-3">
-								<label for="description" class="form-label">상품 설명</label>
-								<textarea id="description" th:field="*{description}" class="form-control" rows="5"></textarea>
-								<p th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger"></p>
-							</div>
-
-							<div class="d-flex justify-content-end">
-								<button type="submit" class="btn btn-primary me-2">수정 등록</button>
-								<button type="button" class="btn btn-secondary" onclick="location.href='@{/item/list}'">상품 목록</button>
-							</div>
-
-						</form>
-
-					</div>
+		<!-- FIX: th:object="${userDto}"를 th:object="${user}"로 변경 -->
+		<form th:object="${user}" th:action="@{/user/update}" method="post">
+			<!-- 글로벌 에러 출력 -->
+			<th:block th:if="${#fields.hasGlobalErrors()}">
+				<div th:each="error : ${#fields.globalErrors()}" class="error">
+					<span th:text="${error}"></span>
 				</div>
-			</div>
-		</div>
+			</th:block>
+
+			<table class="table table-borderless">
+				<tr>
+					<td>아이디</td>
+					<td>
+						<input type="text" th:field="*{userid}" id="userid" class="form-control" readonly/>
+						<span th:if="${#fields.hasErrors('userid')}" th:errors="*{userid}" class="error-message"></span>
+					</td>
+				</tr>
+				<tr>
+					<td>이름</td>
+					<td>
+						<input type="text" th:field="*{username}" class="form-control" />
+						<span th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="error-message"></span>
+					</td>
+				</tr>
+				<tr>
+					<td>전화번호</td>
+					<td>
+						<input type="text" th:field="*{phoneno}" class="form-control" />
+					</td>
+				</tr>
+				<tr>
+					<td>우편번호</td>
+					<td>
+						<input type="text" th:field="*{postcode}" class="form-control" />
+					</td>
+				</tr>
+				<tr>
+					<td>주소</td>
+					<td>
+						<input type="text" th:field="*{address}" class="form-control" />
+					</td>
+				</tr>
+				<tr>
+					<td>이메일</td>
+					<td>
+						<input type="text" th:field="*{email}" class="form-control" />
+						<span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-message"></span>
+					</td>
+				</tr>
+				<tr>
+					<td>생년월일</td>
+					<td>
+						<input type="text" th:field="*{birthday}" class="form-control" placeholder="YYYY-MM-DD" />
+						<span th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}" class="error-message"></span>
+					</td>
+				</tr>
+				<!-- 현재 비밀번호 확인 필드 추가 -->
+				<tr>
+					<td>현재 비밀번호 확인</td>
+					<td>
+						<!-- name="currentPassword"로 컨트롤러에서 직접 받습니다. -->
+						<input type="password" name="currentPassword" class="form-control" required />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" class="text-center pt-4">
+						<input type="submit" value="수정완료" class="btn btn-primary me-2"/>
+						<input type="reset" value="초기화" class="btn btn-secondary me-2"/>
+						<input type="button" value="돌아가기" onclick="backToMyPage()" class="btn btn-info text-white"/>
+					</td>
+				</tr>
+			</table>
+		</form>
 	</div>
 </div>
 
 <th:block layout:fragment="css_js_body">
 	<script th:inline="javascript">
-		const input = document.getElementById("pictureInput");
-		const preview = document.getElementById("preview");
-
-		input.addEventListener("change", function () {
-			const file = this.files[0];
-			if (file && file.type.startsWith("image/")) {
-				const reader = new FileReader();
-				reader.onload = function (e) {
-					preview.src = e.target.result;
-					preview.classList.remove("d-none");
-				};
-				reader.readAsDataURL(file);
+		function backToMyPage() {
+			const userId = /*[[${user.userid}]]*/ 'defaultUser';
+			if (userId) {
+				location.href = /*[[@{/user/mypage(userid=${user.userid})}]]*/ '/user/mypage';
 			} else {
-				// If no file selected or invalid file type, hide preview and reset src
-				preview.src = "#";
-				preview.classList.add("d-none");
+				location.href = /*[[@{/user/login}]]*/ '/user/login';
 			}
-		});
-
-		// Ensure the '상품 목록' button uses the Thymeleaf generated URL
-		document.querySelector("button.btn-secondary").onclick = function() {
-			location.href = /*[[@{/item/list}]]*/ '/item/list';
-		};
+		}
 	</script>
 </th:block>
 

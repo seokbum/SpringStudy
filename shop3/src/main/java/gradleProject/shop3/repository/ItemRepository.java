@@ -10,9 +10,9 @@ import java.util.List;
 @Repository // @Componet + DAO 관련기능. 객체화
 public interface ItemRepository extends JpaRepository<Item, Integer> {
 
-	List<Item> findAll();
+    List<Item> findAll();
 
-	@Query("select coalesce(max(i.id),0) from Item i")
-	int findmaxId();
+    @Query("select coalesce(max(i.id),0) from Item i")
+    int findmaxId();
 
 }
