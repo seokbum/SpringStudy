@@ -1,340 +1,207 @@
-//package gradleProject.shop3.controller;
-//
-//import java.util.List;
-//import java.util.Map;
-//
-//import org.springframework.stereotype.Controller;
-//import org.springframework.ui.Model;
-//import org.springframework.util.StringUtils;
-//import org.springframework.validation.BindingResult;
-//import org.springframework.web.bind.annotation.GetMapping;
-//import org.springframework.web.bind.annotation.PostMapping;
-//import org.springframework.web.bind.annotation.RequestMapping;
-//import org.springframework.web.bind.annotation.RequestParam;
-//import org.springframework.web.servlet.ModelAndView;
-//
-//import jakarta.servlet.http.HttpServletRequest;
-//import jakarta.servlet.http.HttpSession;
-//import jakarta.validation.Valid;
-//import kr.gdu.Shop2Application;
-//import kr.gdu.exception.ShopException;
-//import kr.gdu.logic.Board;
-//import kr.gdu.logic.Comment;
-//import kr.gdu.service.BoardService;
-//import lombok.extern.slf4j.Slf4j;
-//
-//@Controller
-//@RequestMapping("board")
-//@Slf4j
-//public class BoardController {
-//
-//    private final Shop2Application shop2Application;
-//
-//	private final BoardService boardService;
-//
-//	public BoardController(BoardService boardService, Shop2Application shop2Application) {
-//		this.boardService = boardService;
-//		this.shop2Application = shop2Application;
-//	}
-//
-//	@GetMapping("*")
-//	public ModelAndView write() {
-//
-//		ModelAndView mav = new ModelAndView();
-//		mav.addObject(new Board());
-//
-//		return mav;
-//	}
-//
-//	/*
-//	 * Spring에서 파라미터 전달 방식
-//	 * 	1. 파라미터이름과 매개변수의 이름이 같은 경우 매핑
-//	 * 	2. Bean 클래스의 프로퍼티명과 파라미터이름이 같은 경우 매핑
-//	 * 	3. Map객체에 RequestParam 어노테이션을 이용한 매핑
-//	 *
-//	 *
-//	 */
-//	@RequestMapping("list")
-//	public ModelAndView list(@RequestParam Map<String, String> param,
-//			HttpSession session) {
-//
-//		Integer pageNum = null;
-//
-//		for (String key : param.keySet()) {
-//			if (!StringUtils.hasText(param.get(key))) {
-//				param.put(key, null);
-//			}
-//		}
-//
-//		if (StringUtils.hasText(param.get("pageNum"))) {
-//		    try {
-//		        pageNum = Integer.parseInt(param.get("pageNum"));
-//		    } catch (NumberFormatException e) {
-//		        // 숫자로 변환할 수 없는 경우, 기본값 1로 설정하거나 에러 처리
-//		        pageNum = 1;
-//		    }
-//		} else {
-//		    pageNum = 1;
-//		}
-//
-//		String boardid = param.get("boardid");
-//		String searchtype = param.get("searchtype");
-//		String searchcontent = param.get("searchcontent");
-//
-//		ModelAndView mav = new ModelAndView();
-//		String boardName = null;
-//
-//		getBoardName(mav, boardid);
-//
-//		// 게시판 조회 처리
-//		int limit = 10;// 페이지당 건수
-//		int listcount = boardService.boardcount(boardid, searchtype, searchcontent);// boardid 별 전체 게시물 건수
-//		// boardlist : 해당 페이지출력될 게시물 목록
-//		List<Board> boardlist =
-//				boardService.boardlist(pageNum, limit, boardid, searchtype, searchcontent);
-//
-//		// 페이징 처리를 위한 변수
-//		int maxpage = (int) ((double) listcount / limit + 0.95);// 게시물 건수에 따른 최대 페이지 값
-//		int startpage = (int) ((pageNum / 10.0 + 0.9) - 1) * 10 + 1;// 화면에 보여질 시작페이지 값
-//		int endpage = startpage + 9;// 화면에 보여질 마지막페이지 값
-//		if (endpage > maxpage) endpage = maxpage;// 마지막페이지가 최대페이지보다 클때 마지막페이지를 최대페이지로 변경
-//		int boardno = listcount - (pageNum - 1) * limit;
-//
-//		mav.addObject("boardid", boardid);
-//		mav.addObject("pageNum", pageNum);
-//		mav.addObject("maxpage", maxpage);
-//		mav.addObject("startpage", startpage);
-//		mav.addObject("endpage", endpage);
-//		mav.addObject("listcount", listcount);
-//		mav.addObject("boardlist", boardlist);
-//		mav.addObject("boardno", boardno);
-//
-//		return mav;
-//	}
-//
-//	@RequestMapping("detail")
-//	public ModelAndView detail(@RequestParam String num) {
-//
-//		ModelAndView mav = new ModelAndView();
-//
-//		try {
-//			Board board =  boardService.getBoard(num);
-//			boardService.addReadCnt(num);
-//			String boardId = board.getBoardid();
-//
-//			getBoardName(mav, boardId);
-//			mav.addObject("board", board);
-//		} catch(Exception e) {
-//			e.printStackTrace();
-//			log.warn("페이지 조회시 오류발생: {}", num);
-//		}
-//
-//		// 댓글등록
-//		List<Comment> commlist = boardService.commentlist(Integer.parseInt(num));
-//
-//		Comment comment = new Comment();
-//		comment.setNum(Integer.parseInt(num));
-//		mav.addObject("commlist", commlist);
-//		mav.addObject(comment);
-//
-//		return mav;
-//	}
-//
-//	@PostMapping("write")
-//	public ModelAndView writePost(@Valid Board board,
-//			BindingResult bresult,
-//			HttpServletRequest request) {
-//
-//		ModelAndView mav = new ModelAndView();
-//
-//		if (bresult.hasErrors()) {
-//			return mav;
-//		}
-//
-//		if (!StringUtils.hasText(board.getBoardid())) {
-//			board.setBoardid("1");
-//		}
-//
-//		boardService.boardWrite(board, request);
-//		mav.setViewName("redirect:list?boardid=" + board.getBoardid());
-//
-//		return mav;
-//	}
-//
-//	@GetMapping({"reply", "update", "delete"})
-//	public ModelAndView getBoard(String num, String boardid, HttpServletRequest request) {
-//
-//	    ModelAndView mav = new ModelAndView();
-//    	Board board = boardService.getBoard(num);
-//
-//	    mav.addObject("board", board);
-//		getBoardName(mav,boardid);
-//
-//		return mav;
-//	}
-//
-//	@PostMapping("update")
-//	public ModelAndView updateBoard(@Valid Board board,
-//			BindingResult bresult,
-//			HttpServletRequest request) {
-//
-//		ModelAndView mav = new ModelAndView();
-//
-//		if (bresult.hasErrors()) {
-//			return mav;
-//		}
-//
-//		Board dbBoard = boardService.getBoard(String.valueOf(board.getNum()));
-//		if (!board.getPass().equals(dbBoard.getPass())) {
-//			throw new ShopException("비밀번호가 틀립니다.",
-//					"update?num=" + board.getNum() + "&boardid=" + dbBoard.getBoardid());
-//		}
-//
-//		try {
-//			boardService.updateBoard(board,request);
-//			mav.setViewName("redirect:detail?num=" + board.getNum());
-//		} catch(Exception e) {
-//			e.printStackTrace();
-//			throw new ShopException("게시글 수정 실패",
-//					"update?num=" + board.getNum() + "&boardid=" + dbBoard.getBoardid());
-//		}
-//
-//		return mav;
-//	}
-//
-//	@PostMapping("delete")
-//	public String deleteBoard(@Valid Board board, BindingResult bresult,Model model) {
-//
-//		if (!isValidPassword(board.getPass(), board.getNum())) {
-//	        bresult.reject("error.login.password");
-//	        model.addAttribute("num", board.getNum());
-//	        model.addAttribute("boardid", board.getBoardid());
-//	        return "/board/delete";
-//	    }
-//
-//		boardService.deleteBoard(board.getNum());
-//
-//		return "redirect:list?boardid=" + board.getBoardid();
-//	}
-//
-//	/*
-//	 * db에 insert => service.boardReply()
-//	 * 	기존에 등록된 답글들 grpstep변경 : grpstep+1 ->boardDao.grpStepAdd()
-//	 *  기존글들이 새로등록된 답글보다 밑으로 밀려야되기때문에 기존답글들 step증가시킴.
-//	 *
-//	 *  num : maxNum() + 1
-//	 *  grp: 원글과 동일
-//	 *  grplevel : 원글 grplevel++
-//	 *  grpstep : 원글 grpstep++
-//	 *
-//	 *  등록성공 : list로 redirect
-//	 *  실패 : "답변 등록시 오류 발생" reply 페이지 이동
-//	 */
-//	@PostMapping("reply")
-//	public ModelAndView replyBoard(@Valid Board board,
-//			BindingResult bresult,
-//			HttpServletRequest request) {
-//
-//		ModelAndView mav = new ModelAndView();
-//		if (bresult.hasErrors()) {
-//			return mav;
-//		}
-//
-//		try {
-//
-//			boardService.boardReply(board, request);
-//
-//			mav.setViewName("redirect:list?boardid=" + board.getBoardid());
-//		} catch(Exception e) {
-//			e.printStackTrace();
-//			String url = "reply?num="+board.getNum() + "&boardid="+board.getBoardid();
-//			throw new ShopException("답변등록시 오류 발생", url);
-//		}
-//
-//		return mav;
-//	}
-//
-//	@RequestMapping("comment")
-//	public ModelAndView comment(@Valid Comment comm, BindingResult bresult) {
-//		ModelAndView mav = new ModelAndView();
-//		if (bresult.hasErrors()) {
-//			return commdetail(comm);
-//		}
-//
-//		int seq = boardService.commmaxseq(comm.getNum());
-//		comm.setSeq(++seq);
-//		boardService.cominsert(comm);
-//		mav.setViewName("redirect:detail?num="+comm.getNum()+"#comment");
-//
-//		return mav;
-//	}
-//
-//	@RequestMapping("commdel")
-//	public String commdel(Comment comm) {
-//		Comment dbcomm = boardService.commSelectOne(comm.getNum(), comm.getSeq());
-//
-//		if (comm.getPass().equals(dbcomm.getPass())) {
-//			boardService.commdel(comm.getNum(), comm.getSeq());
-//		} else {
-//			throw new ShopException("댓글 삭제 실패", "detail?num=" + comm.getNum() + "#comment");
-//		}
-//
-//		return "redirect:detail?num=" + comm.getNum() + "#comment";
-//	}
-//
-//	private ModelAndView commdetail(Comment comm) {
-//
-//		ModelAndView mav = detail(Integer.toString(comm.getNum()));
-//		mav.setViewName("board/detail");
-//		mav.addObject(comm);
-//		return mav;
-//	}
-//
-//	private boolean isValidPassword(String pass, int num) {
-//
-//		String getPwd = boardService.getPass(num);
-//		if (getPwd.equals(pass)) {
-//			return true;
-//		} else {
-//			return false;
-//		}
-//	}
-//
-//	private void getBoardName(ModelAndView mav, String boardId) {
-//
-//		if (StringUtils.hasText(boardId)) {
-//			switch (boardId) {
-//			case "1":
-//				mav.addObject("boardName", "공지사항");
-//				break;
-//			case "2":
-//				mav.addObject("boardName", "자유게시판");
-//				break;
-//			case "3":
-//				mav.addObject("boardName", "QnA");
-//				break;
-//			default:
-//				break;
-//			}
-//		}
-//	}
-//
-//}
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+package gradleProject.shop3.controller;
+
+import gradleProject.shop3.domain.Board;
+import gradleProject.shop3.domain.Comment;
+import gradleProject.shop3.dto.BoardDto;
+import gradleProject.shop3.exception.ShopException;
+import gradleProject.shop3.mapper.BoardMapper;
+import gradleProject.shop3.service.BoardService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
+
+@Controller
+@RequestMapping("board")
+@RequiredArgsConstructor
+public class BoardController {
+
+    private final BoardService boardService;
+    private final BoardMapper boardMapper; // DTO 변환을 위해 Mapper도 주입
+
+    // 게시물 목록
+    @GetMapping("list")
+    public String list(@RequestParam(value = "boardid", defaultValue = "1") String boardid,
+                       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+                       @RequestParam(value = "searchtype", required = false) String searchtype,
+                       @RequestParam(value = "searchcontent", required = false) String searchcontent,
+                       Model model) {
+        int limit = 10;
+        Page<BoardDto> paging = boardService.boardlist(pageNum, limit, boardid, searchtype, searchcontent);
+        int maxpage = paging.getTotalPages();
+        int startpage = (pageNum - 1) / limit * limit + 1;
+        int endpage = startpage + 9;
+        if (endpage > maxpage) endpage = maxpage;
+
+        model.addAttribute("paging", paging);
+        model.addAttribute("boardlist", paging.getContent());
+        model.addAttribute("boardid", boardid);
+        model.addAttribute("boardName", getBoardName(boardid));
+        model.addAttribute("boardno", paging.getTotalElements() - (pageNum - 1) * limit);
+        model.addAttribute("startpage", startpage);
+        model.addAttribute("endpage", endpage);
+        model.addAttribute("pageNum", pageNum);
+        model.addAttribute("maxpage", maxpage);
+        model.addAttribute("searchtype", searchtype);
+        model.addAttribute("searchcontent", searchcontent);
+        return "board/list";
+    }
+
+    // 게시물 상세
+    @GetMapping("detail")
+    public String detail(@RequestParam int num, Model model) {
+        boardService.addReadcnt(num);
+        Board board = boardService.getBoard(num);
+        if (board == null) throw new ShopException("게시물을 찾을 수 없습니다.", "list?boardid=1");
+
+        List<Comment> commlist = boardService.commentList(num);
+        Comment comment = new Comment();
+        comment.setNum(num);
+
+        model.addAttribute("board", board);
+        model.addAttribute("boardName", getBoardName(board.getBoardid()));
+        model.addAttribute("commlist", commlist);
+        model.addAttribute("comment", comment);
+        return "board/detail";
+    }
+
+    // 글쓰기 폼
+    @GetMapping("write")
+    public String writeForm(@RequestParam String boardid, Model model) {
+        BoardDto boardDto = new BoardDto();
+        boardDto.setBoardid(boardid);
+        model.addAttribute("boardDto", boardDto);
+        model.addAttribute("boardName", getBoardName(boardid));
+        return "board/write";
+    }
+
+    // 글쓰기 처리
+    @PostMapping("write")
+    public String writePost(@Valid @ModelAttribute("boardDto") BoardDto dto, BindingResult bresult, Model model) {
+        if (bresult.hasErrors()) {
+            model.addAttribute("boardName", getBoardName(dto.getBoardid()));
+            return "board/write";
+        }
+        boardService.boardWrite(dto);
+        return "redirect:/board/list?boardid=" + dto.getBoardid();
+    }
+
+    // 수정 폼
+    @GetMapping("update")
+    public String updateForm(@RequestParam int num, Model model) {
+        Board board = boardService.getBoard(num);
+        if (board == null) throw new ShopException("수정할 게시물이 없습니다.", "list?boardid=1");
+        model.addAttribute("boardDto", boardMapper.toDto(board));
+        model.addAttribute("boardName", getBoardName(board.getBoardid()));
+        return "board/update";
+    }
+
+    // 수정 처리
+    @PostMapping("update")
+    public String updatePost(@Valid @ModelAttribute("boardDto") BoardDto dto, BindingResult bresult, Model model) {
+        if (bresult.hasErrors()) {
+            model.addAttribute("boardName", getBoardName(dto.getBoardid()));
+            return "board/update";
+        }
+        Board dbBoard = boardService.getBoard(dto.getNum());
+        if (!dbBoard.getPass().equals(dto.getPass())) {
+            bresult.reject("error.password", "비밀번호가 일치하지 않습니다.");
+            model.addAttribute("boardName", getBoardName(dto.getBoardid()));
+            return "board/update";
+        }
+        boardService.boardUpdate(dto);
+        return "redirect:/board/detail?num=" + dto.getNum();
+    }
+
+    // 삭제 폼
+    @GetMapping("delete")
+    public String deleteForm(@RequestParam int num, Model model) {
+        Board board = boardService.getBoard(num);
+        if (board == null) throw new ShopException("삭제할 게시물이 없습니다.", "list?boardid=1");
+        model.addAttribute("board", board);
+        model.addAttribute("boardName", getBoardName(board.getBoardid()));
+        return "board/delete";
+    }
+
+    // 삭제 처리
+    @PostMapping("delete")
+    public String deletePost(@RequestParam int num, @RequestParam String pass) {
+        Board dbBoard = boardService.getBoard(num);
+        if (!dbBoard.getPass().equals(pass)) {
+            throw new ShopException("비밀번호가 일치하지 않습니다.", "delete?num=" + num);
+        }
+        boardService.boardDelete(num);
+        return "redirect:/board/list?boardid=" + dbBoard.getBoardid();
+    }
+
+    // 답글 폼
+    @GetMapping("reply")
+    public String replyForm(@RequestParam int num, Model model) {
+        Board parent = boardService.getBoard(num);
+        if (parent == null) throw new ShopException("답글을 작성할 게시물이 없습니다.", "list?boardid=1");
+        BoardDto dto = new BoardDto();
+        dto.setBoardid(parent.getBoardid());
+        dto.setGrp(parent.getGrp());
+        dto.setGrplevel(parent.getGrplevel());
+        dto.setGrpstep(parent.getGrpstep());
+        dto.setTitle("RE: " + parent.getTitle());
+        model.addAttribute("boardDto", dto);
+        model.addAttribute("boardName", getBoardName(parent.getBoardid()));
+        return "board/reply";
+    }
+
+    // 답글 처리
+    @PostMapping("reply")
+    public String replyPost(@Valid @ModelAttribute("boardDto") BoardDto dto, BindingResult bresult, Model model) {
+        if (bresult.hasErrors()) {
+            model.addAttribute("boardName", getBoardName(dto.getBoardid()));
+            return "board/reply";
+        }
+        boardService.boardReply(dto);
+        return "redirect:/board/list?boardid=" + dto.getBoardid();
+    }
+
+    // 댓글 등록
+    @PostMapping("comment")
+    public String addComment(@Valid Comment comment, BindingResult bresult, Model model) {
+        if (bresult.hasErrors()) {
+            Board board = boardService.getBoard(comment.getNum());
+            model.addAttribute("board", board);
+            model.addAttribute("commlist", boardService.commentList(comment.getNum()));
+            model.addAttribute("comment", comment);
+            model.addAttribute("boardName", getBoardName(board.getBoardid()));
+            return "board/detail";
+        }
+        boardService.comInsert(comment);
+        return "redirect:/board/detail?num=" + comment.getNum() + "#comment";
+    }
+
+    // 댓글 삭제
+    @PostMapping("commdel")
+    public String deleteComment(Comment comm) {
+        Comment dbComm = boardService.commSelectOne(comm.getNum(), comm.getSeq());
+        if (dbComm == null || !dbComm.getPass().equals(comm.getPass())) {
+            throw new ShopException("비밀번호가 틀려 댓글을 삭제할 수 없습니다.", "detail?num=" + comm.getNum() + "#comment");
+        }
+        boardService.commDel(comm.getNum(), comm.getSeq());
+        return "redirect:/board/detail?num=" + comm.getNum() + "#comment";
+    }
+
+    private String getBoardName(String boardid) {
+        return switch (boardid) {
+            case "1" -> "공지사항";
+            case "2" -> "자유게시판";
+            case "3" -> "Q&A";
+            default -> "게시판";
+        };
+    }
+}
