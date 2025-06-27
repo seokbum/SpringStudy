@@ -1,14 +1,8 @@
 package gradleProject.shop3.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
+import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -17,22 +11,24 @@ import java.util.List;
 @Table(name = "sale")
 @Getter
 @Setter
-@ToString
-@NoArgsConstructor
-
-public class Sale {// 주문정보
+public class Sale {
 
     @Id
     private int saleid;
     private String userid;
     private Date saledate;
-    @Transient
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "userid", insertable = false, updatable = false)
     private User user;
-    @Transient
+
+    @OneToMany(mappedBy = "sale", fetch = FetchType.EAGER)
     private List<SaleItem> itemList = new ArrayList<>();
 
     public int getTotal() {
+        if (itemList == null || itemList.isEmpty()) return 0;
         return itemList.stream()
+                .filter(s -> s.getItem() != null)
                 .mapToInt(s -> s.getItem().getPrice() * s.getQuantity())
                 .sum();
     }

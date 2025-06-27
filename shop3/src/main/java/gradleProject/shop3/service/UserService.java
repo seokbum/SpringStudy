@@ -2,6 +2,7 @@ package gradleProject.shop3.service;
 
 import gradleProject.shop3.domain.Mail;
 import gradleProject.shop3.domain.User;
+import gradleProject.shop3.dto.UserDto;
 import gradleProject.shop3.repository.UserRepository;
 import gradleProject.shop3.util.CipherUtil;
 import jakarta.mail.internet.MimeMessage;
@@ -18,12 +19,11 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-@Transactional
+@Transactional // 클래스 레벨에 적용된 기본 트랜잭션 설정
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-
 
     @Autowired
     private JavaMailSender javaMailSender;
@@ -44,21 +44,39 @@ public class UserService {
         userRepository.updatePassword(chgpass, userid);
     }
 
-    @Transactional(readOnly = true)
     public User selectUser(String userid) {
         return userRepository.findById(userid).orElse(null);
     }
 
+    public String findUserId(String email, String phoneno) {
+        List<User> userList = userRepository.findByPhoneno(phoneno);
+        if (userList.isEmpty()) {
+            return null;
+        }
+        for (User user : userList) {
+            String decryptedEmail = decryptEmailForUser(user).getEmail();
+            if (decryptedEmail.equalsIgnoreCase(email)) {
+                return user.getUserid();
+            }
+        }
+        return null;
+    }
 
+    public boolean verifyUserForPasswordReset(String userid, String email, String phoneno) {
+        User user = userRepository.findById(userid).orElse(null);
+        if (user == null) {
+            return false;
+        }
+        String decryptedEmail = decryptEmailForUser(user).getEmail();
+        return user.getPhoneno().equals(phoneno) && decryptedEmail.equalsIgnoreCase(email);
+    }
 
-    @Transactional(readOnly = true)
     public List<User> findAllAndDecrypt() {
         List<User> list = userRepository.findAll();
         list.forEach(this::decryptEmailForUser);
         return list;
     }
 
-    @Transactional(readOnly = true)
     public List<User> findUsersByIdsAndDecrypt(String[] idchks) {
         if (idchks == null || idchks.length == 0) return Collections.emptyList();
         List<User> list = userRepository.findAllById(Arrays.asList(idchks));
@@ -69,15 +87,10 @@ public class UserService {
     public boolean mailSend(Mail mail) {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
-
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
             helper.setFrom(mail.getGoogleid() + "@gmail.com");
-
             helper.setTo(mail.getRecipient().split(","));
-
             helper.setSubject(mail.getTitle());
-
             helper.setText(mail.getContents(), true);
 
             if (mail.getFile1() != null && !mail.getFile1().isEmpty()) {
@@ -87,19 +100,16 @@ public class UserService {
                     }
                 }
             }
-
-            // 최종 메일 발송
             javaMailSender.send(message);
-            return true; // 성공 시 true 반환
-
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
-            return false; // 실패 시 false 반환
+            return false;
         }
     }
 
     public void mailfileDelete(Mail mail) {
-        // (이 메소드는 필요 시 실제 파일 삭제 로직 구현)
+        // 필요 시 파일 삭제 로직 구현
     }
 
     private User decryptEmailForUser(User user) {
@@ -113,25 +123,27 @@ public class UserService {
         return user;
     }
 
-    public String getSearch(User user) throws Exception {
+    public UserDto encryptEmail(UserDto userDto) throws Exception {
+        String cipherUserid = CipherUtil.makehash(userDto.getUserid());
+        String cipherEmail = CipherUtil.encrypt(userDto.getEmail(), cipherUserid);
+        userDto.setEmail(cipherEmail);
 
-        if (user.getUserid() == null) { //id찾기겠지
-            String email = user.getEmail();
-            String phoneno = user.getPhoneno();
-
-            List<User> users = userRepository.searchByUserid(phoneno);
-            for (User u : users) {
-                u = CipherUtil.emailDecrypt(u);
-                if (u.getEmail().equalsIgnoreCase(email)) {
-                    return u.getUserid();
-                }
-            }
-       }
-//      else {
-//            User user1 = CipherUtil.emailEncrypt(user);
-////            return userRepository.searchByPassword(user1.getUserid(), user1.getEmail(), user1.getPhoneno());
-//        }
-        return null;
-
+        return userDto;
     }
+
+    public String decryptEmail(User user) {
+        try{
+            String hashId = CipherUtil.makehash(user.getUserid());
+            System.err.println("user객체 email확인: " + user.getEmail());
+            System.err.println("user객체 hashId확인: " + hashId);
+            String email = CipherUtil.decrypt(user.getEmail(), hashId);
+            return email;
+        }
+        catch (Exception e) {
+            System.err.println("이메일 복호화 오류");
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

@@ -4,31 +4,34 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Entity
 @Table(name = "saleitem")
-// @IdClass : 키의 클래스. 다중키에서 사용됨
-@IdClass(SaleItemId.class) // 기본키가 복수개 인 경우 필요
+@IdClass(SaleItemId.class)
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
-public class SaleItem {// 주문상품
+public class SaleItem {
 
     @Id
     private int saleid;
     @Id
     private int seq;
+
     private int itemid;
     private int quantity;
-    @Transient
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "saleid", insertable = false, updatable = false)
+    private Sale sale;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "itemid", insertable = false, updatable = false)
     private Item item;
 
     public SaleItem(int saleid, int seq, ItemSet itemSet) {
         this.saleid = saleid;
         this.seq = seq;
-        this.item = itemSet.getItem();
         this.itemid = itemSet.getItem().getId();
         this.quantity = itemSet.getQuantity();
     }

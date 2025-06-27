@@ -6,27 +6,25 @@ import gradleProject.shop3.repository.SaleItemRepository;
 import gradleProject.shop3.repository.SaleRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.util.List;
 
-
 @Service
+@Transactional
 public class ShopService {
 
     @Autowired
     private ItemRepository itemRepository;
+
     @Autowired
     private SaleRepository saleRepository;
 
-    @Value("C:/Users/user/spring_study/shop3/src/main/resources/static/")
-    private String resourceDir;
     @Autowired
     private SaleItemRepository saleItemRepository;
-
 
     public List<Item> itemList() {
         return itemRepository.findAll();
@@ -38,18 +36,14 @@ public class ShopService {
 
     public void itemCreate(Item item, HttpServletRequest request) {
         // item.getPicture() : 업로드 된 파일이 존재. 파일의 내용 저장
-        if (item.getPicture() != null && !item.getPicture().isEmpty()) {
+        if(item.getPicture() !=null && !item.getPicture().isEmpty()) {
             // 업로드 폴더 지정
-            //String path = request.getServletContext().getRealPath("/")+"img/";
-            String path = resourceDir + "img/";
-
-            System.out.println(path);
-
-            uploadFileCreate(item.getPicture(), path);
+            String path = request.getServletContext().getRealPath("/")+"img/";
+            uploadFileCreate(item.getPicture(),path);
             item.setPictureUrl(item.getPicture().getOriginalFilename());
         }
         int maxid = itemRepository.findmaxId(); // db에서 id의 최대 값 조회
-        item.setId(maxid + 1);
+        item.setId(maxid +1);
         itemRepository.save(item);
     }
 
@@ -57,23 +51,22 @@ public class ShopService {
     private void uploadFileCreate(MultipartFile picture, String path) {
         String orgFile = picture.getOriginalFilename(); // 원본 파일의 이름
         File f = new File(path);
-        if (!f.exists()) {
+        if(!f.exists()) {
             f.mkdirs(); // 폴더가 없으면 생성
         }
         try {
             // picture : 파일의 내용
             // transferTo : picture 의 내용을 new File(path+orgFile)의 위치로 저장
-            picture.transferTo(new File(path + orgFile));
+            picture.transferTo(new File(path+orgFile));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void itemUpdate(Item item, HttpServletRequest request) {
-        if (item.getPicture() != null && !item.getPicture().isEmpty()) {
-            //String path = request.getServletContext().getRealPath("/")+"img/";
-            String path = resourceDir + "img/";
-            uploadFileCreate(item.getPicture(), path);
+        if(item.getPicture() != null && !item.getPicture().isEmpty()) {
+            String path = request.getServletContext().getRealPath("/")+"img/";
+            uploadFileCreate(item.getPicture(),path);
             item.setPictureUrl(item.getPicture().getOriginalFilename());
         }
         itemRepository.save(item);
@@ -101,34 +94,11 @@ public class ShopService {
         return sale;
     }
 
+
     public List<Sale> saleList(String userid) {
-
-        // userid 사용자가 주문정보 목록
-        List<Sale> list = saleRepository.saleList(userid);
-        System.out.println("list : " + list);
-
-
-        for (Sale s : list) {//Sale 순회
-            // Sale객체 List<SaleItem>(주문상품모음리스트)에 데이터 할당.
-
-            // 1. saleitem의 saleid가 Sale의 saleid를 참조하므로
-            //    saleid로 saleitem에서 데이터 가져옴
-            List<SaleItem> saleItemList = saleRepository.findById(s.getSaleid()).get().getItemList();
-            System.out.println("saleItemList : " + saleItemList);
-            // 2. 주문상품을 모아둔saleItemList을 순회하며 Item정보를 조회하여 Item데이터 세팅
-            for (SaleItem si : saleItemList) {
-                Item item = itemRepository.findById(si.getItemid()).get();
-                si.setItem(item);
-            }
-            // 3. item정보를 세팅한 리스트를 각 Sale객체에 데이터 세팅
-            s.setItemList(saleItemList);
-        }
-        return list;
+        return saleRepository.findByUserid(userid);
     }
 
-
-
-//
 //	public void exchangeCreate() {
 //		Document doc = null;
 //		List<List<String>> trlist = new ArrayList<List<String>>();
