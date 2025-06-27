@@ -88,14 +88,14 @@ public class UserController {
     }
 
     @PostMapping("idSearch")
-    public String idSearch(@ModelAttribute User user, BindingResult bresult, Model model) throws Exception {
+    public String idSearch(@ModelAttribute User user, Model model) {
         model.addAttribute("title", "아이디 찾기");
         if (!StringUtils.hasText(user.getEmail()) || !StringUtils.hasText(user.getPhoneno())) {
+            model.addAttribute("result", "이메일과 전화번호를 모두 입력하세요.");
             model.addAttribute("user", user);
             return "user/idSearch";
         }
-        user.setUserid(null);
-        String resultId = service.getSearch(user);
+        String resultId = service.findUserId(user.getEmail(), user.getPhoneno());
         if (resultId == null) {
             model.addAttribute("result", "입력하신 정보와 일치하는 사용자가 없습니다.");
         } else {
