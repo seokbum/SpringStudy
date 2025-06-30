@@ -26,7 +26,7 @@ import java.util.List;
 public class BoardController {
 
     private final BoardService boardService;
-    private final BoardMapper boardMapper; // DTO 변환을 위해 Mapper도 주입
+    private final BoardMapper boardMapper;
 
     // 게시물 목록
     @GetMapping("list")

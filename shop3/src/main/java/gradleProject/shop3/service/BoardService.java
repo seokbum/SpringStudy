@@ -30,8 +30,8 @@ public class BoardService {
     private final CommRepository commRepository;
     private final BoardMapper boardMapper;
 
-    @Value("${upload.path:C:/spring/upload/}")
-    private String uploadPath;
+    @Value("${summernote.imgupload}")
+    private String UPLOAD_IMAGE_DIR;
 
     public Page<BoardDto> boardlist(Integer pageNum, int limit, String boardid, String searchtype, String searchcontent) {
         Pageable pageable = PageRequest.of(pageNum - 1, limit,
@@ -116,7 +116,7 @@ public class BoardService {
         String originalFilename = file.getOriginalFilename();
         if (!StringUtils.hasText(originalFilename)) return null;
         String filename = System.currentTimeMillis() + "_" + originalFilename;
-        File targetFile = new File(uploadPath + "board/file/", filename);
+        File targetFile = new File(UPLOAD_IMAGE_DIR  + "board/file/", filename);
         targetFile.getParentFile().mkdirs();
         try {
             file.transferTo(targetFile);
@@ -133,4 +133,235 @@ public class BoardService {
         }
         return spec;
     }
+
+//    public String sidoSelect1(String si, String gu) {
+//        BufferedReader fr = null;
+//        String path = "C:/upload/data/sido.txt";
+//
+//        try {
+//            fr = new BufferedReader(new FileReader(path));
+//        } catch(Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        Set<String> set = new LinkedHashSet<>();
+//        String data = null;
+//
+//        if (si==null && gu==null) {
+//            try {
+//                while ((data=fr.readLine()) != null) {
+//                    String[] arr = data.split("\\s+");
+//                    if (arr.length >= 3) {
+//                        set.add(arr[0].trim());
+//                    }
+//                }
+//            } catch(IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        List<String> list = new ArrayList<String>(set);
+//
+//        return list.toString();
+//    }
+//
+//    public List<String> sidoSelect2(String si, String gu) {
+//        BufferedReader fr = null;
+//        String path = "C:/upload/data/sido.txt";
+//
+//        try {
+//            fr = new BufferedReader(new FileReader(path));
+//        } catch(Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        Set<String> set = new LinkedHashSet<>();
+//        String data = null;
+//
+//        if (si==null && gu==null) {
+//            try {
+//                while ((data=fr.readLine()) != null) {
+//                    String[] arr = data.split("\\s+");
+//                    if (arr.length >= 3) {
+//                        set.add(arr[0].trim());
+//                    }
+//                }
+//            } catch(IOException e) {
+//                e.printStackTrace();
+//            }
+//        } else if (gu == null) {
+//            si = si.trim();
+//            try {
+//                while ((data=fr.readLine()) != null) {
+//                    String[] arr = data.split("\\s+");
+//                    if (arr.length >= 3 && arr[0].equals(si) && !arr[1].contains(arr[0])) {
+//                        set.add(arr[1].trim());
+//                    }
+//                }
+//            } catch(IOException e) {
+//                e.printStackTrace();
+//            }
+//        } else {
+//            si = si.trim();
+//            gu = gu.trim();
+//            try {
+//                while ((data=fr.readLine()) != null) {
+//                    String[] arr = data.split("\\s+");
+//                    if (arr.length >= 3 && arr[0].equals(si) && arr[1].equals(gu) && !arr[0].equals(arr[1]) && !arr[2].contains(arr[1])) {
+//                        if (arr.length > 3) {
+//                            if (arr[3].contains(arr[1])) {
+//                                continue;
+//                            }
+//                        }
+//                        set.add(arr[2].trim());
+//                    }
+//                }
+//            } catch(IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        List<String> list = new ArrayList<String>(set);
+//
+//        return list;
+//    }
+//
+//    public String exchange1() {
+//        Document doc = null;
+//        List<List<String>> trlist = new ArrayList<List<String>>();
+//        String url = "https://www.koreaexim.go.kr/wg/HPHKWG057M01";
+//        String exdate = null;
+//
+//        try {
+//            doc = Jsoup.connect(url).get();
+//            Elements trs = doc.select("tr");
+//            exdate = doc.select("p.table-unit").html();
+//
+//            for (Element tr : trs) {
+//                List<String> tdlist = new ArrayList<String>();
+//                Elements tds = tr.select("td");
+//                for (Element td : tds) {
+//                    tdlist.add(td.html());
+//                }
+//                if (tdlist.size() > 0) {
+//                    if (tdlist.get(0).equals("USD") || tdlist.get(0).equals("CNH") ||
+//                            tdlist.get(0).equals("JPY(100)") || tdlist.get(0).equals("EUR")) {
+//                        trlist.add(tdlist);
+//                    }
+//                }
+//            }
+//        } catch(IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("<h4 class='title'> 수출입은행<br>" + exdate + "</h4>");
+//        sb.append("<table class='table'>");
+//        sb.append(
+//                "<tr>"
+//                        + "<th>통화</th>"
+//                        + "<th>기준율</th>"
+//                        + "<th>받으실때</th>"
+//                        + "<th>보내실때</th>"
+//                        + "</tr>"
+//        );
+//
+//        for (List<String> tds : trlist) {
+//            sb.append(
+//                    "<tr> "
+//                            + "<td>" + tds.get(0) + "<br>" + tds.get(1) + "</td>"
+//                            + "<td>" + tds.get(4) + "</td>");
+//            sb.append(
+//                    "<td>" + tds.get(2) + "</td>"
+//                            + "<td>" + tds.get(3) + "</td>"
+//            );
+//        }
+//        sb.append("</table>");
+//
+//        return sb.toString();
+//    }
+//
+//    public Map<String, Object> exchange2() {
+//        Document doc = null;
+//        List<List<String>> trlist = new ArrayList<List<String>>();
+//        String url = "https://www.koreaexim.go.kr/wg/HPHKWG057M01";
+//        String exdate = null;
+//
+//        try {
+//            doc = Jsoup.connect(url).get();
+//            Elements trs = doc.select("tr");
+//            exdate = doc.select("p.table-unit").html();
+//
+//            for (Element tr : trs) {
+//                List<String> tdlist = new ArrayList<String>();
+//                Elements tds = tr.select("td");
+//                for (Element td : tds) {
+//                    tdlist.add(td.html());
+//                }
+//                if (tdlist.size() > 0) {
+//                    if (tdlist.get(0).equals("USD") || tdlist.get(0).equals("CNH") ||
+//                            tdlist.get(0).equals("JPY(100)") || tdlist.get(0).equals("EUR")) {
+//                        trlist.add(tdlist);
+//                    }
+//                }
+//            }
+//        } catch(IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        map.put("exdate", exdate);
+//        map.put("trlist", trlist);
+//
+//        return map;
+//    }
+//
+//    public Map<String, Integer> graph1(String id) {
+//        // list : [{writer="김석범", cnt:10}, {writer="유동곤", cnt:7}...]
+//        List<Map<String, Object>> list = boardDao.graph1(id);
+//        Map<String, Integer> map = new HashMap<>();
+//
+//        for (Map<String, Object> m : list) {
+//            String writer = (String) m.get("writer");
+//            long cnt = (Long) m.get("cnt");
+//            map.put(writer, (int) cnt);
+//        }
+//        return map;
+//    }
+//
+//    public Map<String, Object> getLogo() {
+//        Document doc = null;
+//        String url = "https://gudi.kr";
+//        String src = null;
+//
+//        try {
+//            doc = Jsoup.connect(url).get();
+//            Elements imgElements = doc.select("img.normal_logo._front_img");
+//
+//            // 선택된 요소가 있는지 확인
+//            if (!imgElements.isEmpty()) {
+//                Element img = imgElements.first();
+//                src = img.attr("src");
+//            }
+//        } catch(IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        map.put("logo", src);
+//
+//        return map;
+//    }
+//
+//    public Map<String, Integer> graph2(String id) {
+//
+//        // list : [{regdate="2025-03-01", cnt:10}, {regdate="2025-05-01", cnt:5}...]
+//        List<Map<String, Object>> list = boardDao.graph2(id);
+//        Map<String, Integer> map = new HashMap<>();
+//
+//        for (Map<String, Object> m : list) {
+//            String regdate = m.get("regdate").toString();
+//            long cnt = (Long) m.get("cnt");
+//            map.put(regdate, (int) cnt);
+//        }
+//        return map;
+//    }
 }
