@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <style>
+        #piecontainer, #barcontainer {
+            width: 100%; /* 부모 .radio-toggle에 48%를 줬으므로 여기서는 100%로 채움 */
+            height: 250px; /* 명시적으로 높이 설정 */
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 0.5rem;
+            box-sizing: border-box;
+        }
+    </style>
+    <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+    <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+<div id="mainContent" class="main-content">
+    <div class="chart-wrapper">
+        <div class="radio-toggle">
+            <div class="btn-group" role="group" aria-label="Pie chart selection">
+                <label class="btn btn-outline-primary active"> <input
+                        type="radio" name="pie" onchange="piegraph(2)" checked>
+                    자유게시판
+                </label> <label class="btn btn-outline-primary"> <input type="radio"
+                                                                        name="pie" onchange="piegraph(3)"> Q&A
+            </label>
+            </div>
+            <div id="piecontainer"></div>
+        </div>
+        <div class="radio-toggle">
+            <div class="btn-group" role="group" aria-label="Pie chart selection">
+                <label class="btn btn-outline-primary active"> <input
+                        type="radio" name="barline" onchange="barlinegraph(2)" checked>
+                    자유게시판
+                </label> <label class="btn btn-outline-primary"> <input type="radio"
+                                                                        name="barline" onchange="barlinegraph(3)"> Q&A
+            </label>
+            </div>
+            <div id="barcontainer"></div>
+        </div>
+    </div>
+
+    <script>
+        $(function() {
+            piegraph(2) //글쓴이별 게시글 건수를 파이그래프로출력
+            barlinegraph(2)
+        })
+
+        let randomColorFactor = function(){
+            return Math.round(Math.random()*255)
+        }
+
+        let randomColor = function(opa){
+            return "rgba("+randomColorFactor()+","
+                +randomColorFactor()+","
+                +randomColorFactor()+","
+                +(opa || ".3") + ")";
+        } //각각의 색깔
+
+        function piegraph(id){
+            $.ajax("../ajax/graph1?id="+id,{
+                success : function(json){
+                    // 캔버스 생성 시 높이 속성 추가
+                    let canvas = "<canvas id='canvas1' style='width:100%; height:100%;'></canvas>"; // 캔버스 높이 직접 지정 (예: 100px)
+                    $("#piecontainer").html(canvas);
+                    console.log(json);
+                    pieGraphPrint(json,id);
+                },
+                error : function(e){
+                    alert("서버오류 : "+e.status);
+                }
+            })
+        }
+
+        function pieGraphPrint(arr,id){
+//arr : [{장원영:10},{안유진:20},....]
+            let colors = [];
+            let writers = [];
+            let datas = [];
+            $.each(arr,function(index){
+                colors[index] = randomColor(0.5);
+                for(key in arr[index]){
+                    writers.push(key); // key값(writer)
+                    datas.push(arr[index][key]); //각map의 value(cnt)
+                }
+            })
+            let title = (id == 2)?"자유게시판":"Q&A";
+            let config = {
+                type:'pie',
+                data : {
+                    datasets : [{ data:datas,
+                        backgroundColor : colors}],
+                    labels : writers
+                },
+                options : {
+                    responsive : true,
+                    maintainAspectRatio: false, // 가로-세로 비율 유지를 비활성화합니다.
+                    legend : {
+                        display:true,
+                        position:"right",
+                        labels: {
+                            boxWidth: 15, // 범례 상자의 너비를 더 줄입니다.
+                            padding: 5   // 범례 항목 간의 간격을 더 줄입니다.
+                        }
+                    },
+                    title : {
+                        display : true,
+                        text : '글쓴이 별 '+title+"등록건수",
+                        position : 'bottom',
+                        fontSize: 10 // 제목 글씨 크기를 더 줄입니다.
+                    },
+                    layout: {
+                        padding: {
+                            left: 5, // 그래프 내부 여백을 더 줄입니다.
+                            right: 5,
+                            top: 5,
+                            bottom: 5
+                        }
+                    },
+                    elements: {
+                        arc: {
+                            borderWidth: 0 // 조각의 테두리를 제거하여 시각적으로 더 작게 보이게 할 수 있습니다.
+                        }
+                    }
+                }
+            }
+            let ctx = document.getElementById("canvas1")
+            new Chart(ctx,config)
+        }
+
+
+        function barlinegraph(id){
+            $.ajax("../ajax/graph2?id="+id,{
+                success : function(arr){
+                    // 캔버스 생성 시 높이 속성 추가
+                    let canvas = "<canvas id='canvas2' style='width:100%; height:100%;'></canvas>"; // 캔버스 높이 직접 지정 (예: 100px)
+                    $("#barcontainer").html(canvas);
+                    console.log(arr)
+                    barlinGraphPrint(arr,id);
+                },
+                error : function(e){
+                    alert("서버오류 : "+e.status);
+                }
+            })
+        }
+
+        function barlinGraphPrint(arr,id){
+            let colors = [];
+            let regdates = [];
+            let datas = [];
+            $.each(arr,function(index){
+                colors[index] = randomColor(0.5)
+                for(key in arr[index]){
+                    regdates.push(key);
+                    datas.push(arr[index][key])
+                }
+            })
+            let title = (id==2)?"자유게시판":"Q&A";
+            let config = {
+                type:'bar',
+                data:{
+                    datasets:[
+                        {
+                            type:"line",
+                            borderWidth:2,
+                            borderColor:colors,
+                            label:'건수',
+                            fill:false,
+                            data:datas
+                        },
+                        {
+                            type:"bar",
+                            backgroundColor:colors,
+                            label : '건수',
+                            data : datas
+                        }
+                    ],
+                    labels : regdates,
+                },
+                options : {
+                    responsive : true,
+                    legend : {display:false},
+                    title:{
+                        display :true,
+                        text : '최근7일'+title+"등록건수",
+                        position : 'bottom'
+                    },
+                    scales:{
+                        xAxes : [{ display : true,
+                            scaleLabel : {
+                                display : true,
+                                labelString : "작성일자"
+                            }
+                        }],
+                        yAxes : [{
+                            scaleLabel : {
+                                display : true,
+                                labelString : "게시물 등록 건수"
+                            },
+                            ticks : {begenAtZero : true}
+                        }]
+
+                    }
+                }
+            }
+            let ctx = document.getElementById("canvas2")
+            new Chart(ctx,config)
+        }
+    </script>
+</body>
+</html>

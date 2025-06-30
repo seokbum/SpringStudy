@@ -16,6 +16,7 @@ public class Sale {
     @Id
     private int saleid;
     private String userid;
+    @Temporal(TemporalType.TIMESTAMP) // 날짜 + 시간 
     private Date saledate;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -25,10 +26,12 @@ public class Sale {
     @OneToMany(mappedBy = "sale", fetch = FetchType.EAGER)
     private List<SaleItem> itemList = new ArrayList<>();
 
+    @PrePersist
+    public void onePersist() { // save() 함수 호출 직전에 먼저 호출
+        this.saledate = new Date();
+    }
     public int getTotal() {
-        if (itemList == null || itemList.isEmpty()) return 0;
         return itemList.stream()
-                .filter(s -> s.getItem() != null)
                 .mapToInt(s -> s.getItem().getPrice() * s.getQuantity())
                 .sum();
     }

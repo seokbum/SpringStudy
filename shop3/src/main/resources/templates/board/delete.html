@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${boardName} + ' - 게시글 삭제'">게시글 삭제</title>
+  <th:block layout:fragment="css_js_head">
+    <style>
+      .container { max-width: 600px; margin-top: 50px; }
+      .card-header { background-color: #dc3545; color: white; text-align: center; font-size: 1.25rem; }
+      .btn-danger { width: 100%; padding: 10px; }
+    </style>
+  </th:block>
+</head>
+<body>
+<div layout:fragment="content">
+  <div class="container">
+    <div class="card shadow-sm">
+      <div class="card-header" th:text="${boardName} + ' 글 삭제'"></div>
+      <div class="card-body p-4">
+        <p class="text-center mb-4">게시글을 삭제하려면 비밀번호를 입력하세요.</p>
+        <form th:action="@{/board/delete}" th:object="${board}" method="post">
+          <input type="hidden" th:field="*{num}" />
+          <input type="hidden" th:field="*{boardid}" />
+
+          <div class="mb-3">
+            <label for="pass" class="form-label visually-hidden">게시글 비밀번호</label>
+            <input type="password" name="pass" class="form-control" id="pass" placeholder="비밀번호" required/>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-danger">게시글 삭제 확인</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

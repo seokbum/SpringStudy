@@ -130,6 +130,7 @@ public class CartController {
         session.removeAttribute("CART");// 장바구니 초기화
         mav.addObject("sale", sale);
         return mav;
+
     }
     //
     // @RequestMapping("kakao")

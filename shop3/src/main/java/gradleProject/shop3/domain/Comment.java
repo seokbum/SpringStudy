@@ -1,25 +1,29 @@
 package gradleProject.shop3.domain;
 
-import jakarta.validation.constraints.NotEmpty;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
-@Getter
-@Setter
-@ToString
+@Entity
+@Table(name = "comment")
+@IdClass(CommentId.class)
+@Data
+@NoArgsConstructor
 public class Comment {
-
+    @Id
     private int num;
+    @Id
     private int seq;
-    @NotEmpty(message = "작성자를 입력하세요")
     private String writer;
-    @NotEmpty(message = "비밀번호를 입력하세요")
     private String pass;
-    @NotEmpty(message = "내용을 입력하세요")
     private String content;
-    private Date regdate;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date regdate; // 등록일자 현재시간으로 등록
 
+    @PrePersist
+    public void onPrePersist() {
+        this.regdate = new Date();
+    }
 }
