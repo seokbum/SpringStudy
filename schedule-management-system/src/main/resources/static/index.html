@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단 일정 관리 시스템</title>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/main.min.css' rel='stylesheet' />
+    <script src='https://code.jquery.com/jquery-3.7.1.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.14/locales/ko.global.min.js'></script>
+
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/main.js"></script>
+</head>
+<body>
+<h1>간단 일정 관리 시스템</h1>
+
+<div class="container">
+    <div id="calendar"></div>
+</div>
+
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2 id="modalTitle">새 일정 추가</h2>
+        <form id="eventForm">
+            <input type="hidden" id="eventId"> <label for="eventTitle">제목:</label>
+            <input type="text" id="eventTitle" required><br><br>
+
+            <label for="eventStartDate">시작일시:</label>
+            <input type="datetime-local" id="eventStartDate" required><br><br>
+
+            <label for="eventEndDate">종료일시:</label>
+            <input type="datetime-local" id="eventEndDate" required><br><br>
+
+            <input type="checkbox" id="allDayEvent"> <label for="allDayEvent">종일 이벤트</label><br><br>
+
+            <label for="eventDescription">설명:</label><br>
+            <textarea id="eventDescription" rows="4"></textarea><br><br>
+
+            <button type="submit" id="saveEventBtn">저장</button>
+            <button type="button" id="deleteEventBtn" style="background-color: #dc3545; display: none;">삭제</button>
+            <button type="button" id="cancelBtn">취소</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

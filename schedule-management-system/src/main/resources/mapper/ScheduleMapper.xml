@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myproject.schedulemanagementsystem.mapper.ScheduleMapper">
+
+    <resultMap id="eventResultMap" type="com.myproject.schedulemanagementsystem.model.Event">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="allDay" column="all_day"/>
+        <result property="description" column="description"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findAllEvents" resultMap="eventResultMap">
+        SELECT id, title, start_time, end_time, all_day, description, created_at
+        FROM events
+        ORDER BY start_time ASC
+    </select>
+
+    <select id="findEventsByTimeRange" resultMap="eventResultMap">
+        SELECT id, title, start_time, end_time, all_day, description, created_at
+        FROM events
+        WHERE (start_time BETWEEN #{start} AND #{end})
+           OR (end_time BETWEEN #{start} AND #{end})
+           OR (start_time <![CDATA[<=]]> #{start} AND end_time <![CDATA[>=]]> #{end})
+        ORDER BY start_time ASC
+    </select>
+
+    <insert id="insertEvent" parameterType="com.myproject.schedulemanagementsystem.model.Event" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO events (title, start_time, end_time, all_day, description)
+        VALUES (#{title}, #{startTime}, #{endTime}, #{allDay}, #{description})
+    </insert>
+
+    <update id="updateEvent" parameterType="com.myproject.schedulemanagementsystem.model.Event">
+        UPDATE events
+        SET
+            title = #{title},
+            start_time = #{startTime},
+            end_time = #{endTime},
+            all_day = #{allDay},
+            description = #{description}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteEvent" parameterType="int">
+        DELETE FROM events WHERE id = #{id}
+    </delete>
+
+    <select id="findEventById" parameterType="int" resultMap="eventResultMap">
+        SELECT id, title, start_time, end_time, all_day, description, created_at
+        FROM events
+        WHERE id = #{id}
+    </select>
+
+</mapper>
