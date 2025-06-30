@@ -1,9 +1,6 @@
 package gradleProject.shop3.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -22,6 +19,11 @@ public class Comment {
     private String writer;
     private String pass;
     private String content;
-    private Date regdate;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date regdate; // 등록일자 현재시간으로 등록
 
+    @PrePersist
+    public void onPrePersist() {
+        this.regdate = new Date();
+    }
 }

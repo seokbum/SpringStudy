@@ -13,14 +13,9 @@ import java.util.Optional;
 
 public interface CommRepository extends JpaRepository<Comment, CommentId> {
 
-    List<Comment> findByNumOrderBySeqDesc(int num);
+    List<Comment> findByNum(int num); // JPA에서 자동으로 SQL구문 생성
 
     @Query("SELECT COALESCE(MAX(c.seq), 0) FROM Comment c WHERE c.num = :num")
     int maxSeq(@Param("num") int num);
 
-    Optional<Comment> findByNumAndSeq(int num, int seq);
-
-    @Transactional
-    @Modifying
-    void deleteByNumAndSeq(int num, int seq);
 }

@@ -1,0 +1,65 @@
+<div class="card" style="width: 350px; height: 450px; box-shadow: 0 8px 20px rgba(0,0,0,0.2);">
+    <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+        <span>💬 실시간 채팅</span>
+        <button class="btn btn-sm btn-light" onclick="$('#chat-box-container').empty(); window.chatOpen = false;">✖</button>
+    </div>
+    <div class="card-body d-flex flex-column">
+        <textarea name="chatMsg" class="form-control mb-2" rows="10" readonly style="background-color: #f8f9fa; resize: none;"></textarea>
+        <input type="text" name="chatInput" class="form-control" placeholder="메시지를 입력하세요..." />
+    </div>
+</div>
+
+<script th:inline="javascript">
+    $(function(){
+        // WebSocket 서버 주소 (필요시 환경에 맞게 수정)
+        // const wsUrl = "ws://" + location.host + [[@{/chatting}]];
+        const wsUrl = "ws://localhost:8083/chatting";
+        let ws = new WebSocket(wsUrl);
+
+        // 로그인한 유저 아이디 가져오기 (세션에서 가져오는 것을 권장)
+        const loginUser = /*[[${session.loginUser?.userid}]]*/ 'guest';
+
+        // 웹소켓 연결 성공 시
+        ws.onopen = function(){
+            console.log("웹소켓 서버에 연결되었습니다.");
+
+            // 엔터 키를 누르면 메시지 전송
+            $("input[name=chatInput]").on("keydown", function(evt){
+                if(evt.keyCode == 13){
+                    const chatInput = $(this);
+                    let msg = chatInput.val();
+                    if (msg.trim() !== "") {
+                        // 메시지 형식: "아이디: 메시지"
+                        ws.send(loginUser + ": " + msg);
+                        chatInput.val("");
+                    }
+                }
+            });
+        };
+
+        // 서버로부터 메시지 수신 시
+        ws.onmessage = function(event){
+            let area = $("textarea[name=chatMsg]");
+            // 새 메시지를 맨 위에 추가
+            area.val(event.data + "\n" + area.val());
+        };
+
+        // 연결 종료 시
+        ws.onclose = function(){
+            console.log("웹소켓 연결이 종료되었습니다.");
+            // 필요시 재연결 로직 추가
+        };
+
+        // 에러 발생 시
+        ws.onerror = function(error) {
+            console.error("웹소켓 에러 발생: ", error);
+        };
+
+        // 채팅창이 닫힐 때 웹소켓 연결도 함께 종료
+        $('#chat-box-container').on('DOMNodeRemoved', function(e) {
+            if ($(e.target).hasClass('card')) {
+                ws.close();
+            }
+        });
+    });
+</script>

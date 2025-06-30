@@ -60,8 +60,13 @@
 
                 <div class="comment-list mb-5">
                     <div th:if="${#lists.isEmpty(commlist)}" class="text-muted text-center p-3">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</div>
-                    <div th:each="c : ${commlist}" class="d-flex">
-                        <div class="flex-shrink-0"><i class="bi bi-person-circle fs-4 text-secondary"></i></div>
+
+                    <div th:each="c, iterStat : ${commlist}" class="d-flex align-items-center">
+
+                        <div class="flex-shrink-0 text-center fw-bold text-secondary" style="width: 40px;">
+                            <span class="fs-5" th:text="${iterStat.count}"></span>
+                        </div>
+
                         <div class="ms-3 w-100">
                             <div class="d-flex justify-content-between">
                                 <div>
@@ -79,7 +84,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="comment-form mt-4">
                     <h6 class="mb-3">댓글 작성</h6>
                     <form th:action="@{/board/comment}" th:object="${comment}" method="post">
