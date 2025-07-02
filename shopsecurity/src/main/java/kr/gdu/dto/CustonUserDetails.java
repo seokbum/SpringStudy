@@ -14,15 +14,18 @@ import java.util.Collection;
         => 내부적으로 사용자의 인증상태를 판단하기 위한 기능
  */
 public class CustonUserDetails implements UserDetails {
+
     // 사용자 정보를 저장하는 엔티티객체. DB 사용자 정보
     private UserEntity userEntity;
 
     public CustonUserDetails(UserEntity userEntity) {
         this.userEntity = userEntity;
     }
+
     /*
         GrantedAuthority : 권한담당 객체
      */
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<GrantedAuthority> collection = new ArrayList<>();

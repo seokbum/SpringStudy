@@ -22,7 +22,7 @@ public class LoginService {
         data.setPassword(bCryptPasswordEncoder.encode(joinDto.getPassword()));
         if (joinDto.getUsername().equals("admin")) {
             data.setRole("ROLE_ADMIN");
-        }else {
+        } else {
             data.setRole("ROLE_USER");
         }
         userRepository.save(data);

@@ -1,10 +1,8 @@
 package com.myproject.schedulemanagementsystem.controller;
 
+import com.myproject.schedulemanagementsystem.dto.ScheduleDto;
 import com.myproject.schedulemanagementsystem.model.Event;
 import com.myproject.schedulemanagementsystem.service.ScheduleService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -76,17 +74,16 @@ public class ScheduleController {
         scheduleService.deleteEvent(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content 응답
     }
-
-    // FullCalendar에서 필요한 이벤트 DTO (내부 클래스로 정의)
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ScheduleDto {
-        private Integer id;
-        private String title;
-        private LocalDateTime start; // FullCalendar의 필드명 'start'
-        private LocalDateTime end;   // FullCalendar의 필드명 'end'
-        private boolean allDay;
-        // String color; // FullCalendar에서 이벤트 색상 지정을 위해 추가 가능
+    // 특정 ID의 일정 상세 정보를 가져오는 GET 요청
+    // http://localhost:8080/api/schedules/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<Event> getScheduleById(@PathVariable int id) {
+        Event event = scheduleService.getEventById(id);
+        if (event == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 이벤트가 없으면 404 응답
+        }
+        return ResponseEntity.ok(event); // 200 OK와 함께 이벤트 반환
     }
+    // FullCalendar에서 필요한 이벤트 DTO (내부 클래스로 정의)
+
 }
