@@ -1,6 +1,8 @@
 package boot_react.entity;
 
+import boot_react.dto.BoardDto;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,6 +11,7 @@ import java.util.Date;
 @Entity
 @Data
 @NoArgsConstructor
+
 public class BoardEntity {
 
     @Id
@@ -30,5 +33,16 @@ public class BoardEntity {
     @PrePersist
     public void onPrePersist() {
         this.regdate = new Date();
+    }
+    public BoardEntity(BoardDto boardDto) {
+        this.num = boardDto.getNum();
+        this.name = boardDto.getName();
+        this.pass = boardDto.getPass();
+        this.subject = boardDto.getSubject();
+        this.content = boardDto.getContent();
+        this.file1 = boardDto.getFile1();
+        this.readcnt = boardDto.getReadcnt();
+        this.boardid = boardDto.getBoardid();
+        this.regdate = boardDto.getRegdate();
     }
 }

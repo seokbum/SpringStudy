@@ -1,5 +1,6 @@
 package boot_react.service;
 
+import boot_react.dto.BoardDto;
 import boot_react.entity.BoardEntity;
 import boot_react.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,5 +29,21 @@ public class BoardService {
         Pageable pageable = PageRequest.of(pageInt - 1, limit,
                 Sort.by(Sort.Order.desc("num")));
         return  boardRepository.findAll(spec,pageable);
+    }
+
+    public BoardEntity insertBoard(BoardEntity boardEntity) {
+        return  boardRepository.save(boardEntity);
+    }
+
+    public BoardEntity getBoard(int num) {
+        return boardRepository.findById(num).orElseGet(null);
+    }
+
+    public void addReadcnt(int num) {
+        boardRepository.addReadcnt(num);
+    }
+
+    public void boardUpdate(BoardEntity boardEntity) {
+        boardRepository.save(boardEntity);
     }
 }
