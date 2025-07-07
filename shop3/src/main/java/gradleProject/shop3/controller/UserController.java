@@ -2,7 +2,6 @@ package gradleProject.shop3.controller;
 
 import gradleProject.shop3.domain.Sale;
 import gradleProject.shop3.domain.User;
-import gradleProject.shop3.dto.SaleDto;
 import gradleProject.shop3.dto.UserDto;
 import gradleProject.shop3.exception.ShopException;
 import gradleProject.shop3.mapper.UserMapper;
@@ -274,7 +273,7 @@ public class UserController {
             user.setUserid(email.substring(0, email.indexOf("@")));
             user.setEmail(email);
             user.setPhoneno(phone);
-            user.setChannel("naver");
+            user.setChannel("templates/naver");
             service.userInsert(user);
         }
         session.setAttribute("loginUser", user);

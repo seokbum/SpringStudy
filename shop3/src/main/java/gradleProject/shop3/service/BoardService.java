@@ -13,6 +13,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,7 +41,7 @@ public class BoardService {
 
     public Page<BoardDto> boardlist(Integer pageNum, int limit, String boardid, String searchtype, String searchcontent) {
         Pageable pageable = PageRequest.of(pageNum - 1, limit,
-                Sort.by(Sort.Order.desc("grp"), Sort.Order.asc("grpstep"), Sort.Order.desc("regdate")));
+                Sort.by(Sort.Order.desc("grp"), Sort.Order.asc("grpstep")));
         Specification<Board> spec = search(boardid, searchtype, searchcontent);
         Page<Board> entityPage = boardRepository.findAll(spec, pageable);
         List<BoardDto> dtoList = entityPage.getContent().stream()
@@ -55,7 +55,6 @@ public class BoardService {
         int maxNum = boardRepository.maxNum();
         board.setNum(maxNum + 1);
         board.setGrp(maxNum + 1);
-        board.setRegdate(new Date());
         if (dto.getFile1() != null && !dto.getFile1().isEmpty()) {
             board.setFileurl(uploadFileCreate(dto.getFile1()));
         }
@@ -74,7 +73,6 @@ public class BoardService {
         Board board = boardRepository.findById(dto.getNum()).orElseThrow(() -> new IllegalArgumentException("수정할 게시글이 없습니다."));
         board.setTitle(dto.getTitle());
         board.setContent(dto.getContent());
-        board.setRegdate(new Date());
         if (dto.getFile1() != null && !dto.getFile1().isEmpty()) {
             board.setFileurl(uploadFileCreate(dto.getFile1()));
         }
@@ -91,7 +89,6 @@ public class BoardService {
         reply.setNum(maxNum + 1);
         reply.setGrplevel(dto.getGrplevel() + 1);
         reply.setGrpstep(dto.getGrpstep() + 1);
-        reply.setRegdate(new Date());
         if (dto.getFile1() != null && !dto.getFile1().isEmpty()) {
             reply.setFileurl(uploadFileCreate(dto.getFile1()));
         }
@@ -105,18 +102,15 @@ public class BoardService {
     public void comInsert(Comment comm) {
         int seq = commRepository.maxSeq(comm.getNum());
         comm.setSeq(seq + 1);
-        comm.setRegdate(new Date());
         commRepository.save(comm);
     }
 
     public Comment commSelectOne(int num, int seq) {
-        //기본키 값으로 조회 : findById(키)
         CommentId id = new CommentId(num, seq);
-        return commRepository.findById(id).orElseGet(() -> null);
+        return commRepository.findById(id).orElse(null);
     }
 
     public void commDel(int num, int seq) {
-        // 키값으로 레코드 제거 : deleteById(키)
         CommentId id = new CommentId(num, seq);
         commRepository.deleteById(id);
     }
@@ -125,7 +119,7 @@ public class BoardService {
         String originalFilename = file.getOriginalFilename();
         if (!StringUtils.hasText(originalFilename)) return null;
         String filename = System.currentTimeMillis() + "_" + originalFilename;
-        File targetFile = new File(uploadPath + "board/file/", filename);
+        File targetFile = new File(uploadPath, "board/file/" + filename);
         targetFile.getParentFile().mkdirs();
         try {
             file.transferTo(targetFile);
@@ -136,237 +130,167 @@ public class BoardService {
     }
 
     private Specification<Board> search(String boardid, String searchtype, String searchcontent) {
-        Specification<Board> spec = (root, query, builder) -> builder.equal(root.get("boardid"), boardid);
-        if (StringUtils.hasText(searchtype) && StringUtils.hasText(searchcontent)) {
-            spec = spec.and((root, query, builder) -> builder.like(root.get(searchtype), "%" + searchcontent + "%"));
-        }
-        return spec;
+        return (root, query, builder) -> {
+            if (StringUtils.hasText(searchtype) && StringUtils.hasText(searchcontent)) {
+                return builder.and(
+                        builder.equal(root.get("boardid"), boardid),
+                        builder.like(root.get(searchtype), "%" + searchcontent + "%")
+                );
+            } else {
+                return builder.equal(root.get("boardid"), boardid);
+            }
+        };
     }
 
-    public String sidoSelect1(String si, String gu) {
-        BufferedReader fr = null;
-        String path = "C:/upload/data/sido.txt";
-
-        try {
-            fr = new BufferedReader(new FileReader(path));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+    private List<String> readSidoFile(String si, String gu) {
+        ClassPathResource resource = new ClassPathResource("data/sido.txt");
         Set<String> set = new LinkedHashSet<>();
-        String data = null;
+        try (InputStream inputStream = resource.getInputStream();
+             BufferedReader fr = new BufferedReader(new InputStreamReader(inputStream))) {
+            String data;
+            while ((data = fr.readLine()) != null) {
+                String[] arr = data.split("\\s+");
+                if (arr.length < 2) continue;
 
-        if (si == null && gu == null) {
-            try {
-                while ((data = fr.readLine()) != null) {
-                    String[] arr = data.split("\\s+");
-                    if (arr.length >= 3) {
-                        set.add(arr[0].trim());
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        List<String> list = new ArrayList<String>(set);
-
-        return list.toString();
-    }
-
-    public List<String> sidoSelect2(String si, String gu) {
-        BufferedReader fr = null;
-        String path = "C:/upload/data/sido.txt";
-
-        try {
-            fr = new BufferedReader(new FileReader(path));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        Set<String> set = new LinkedHashSet<>();
-        String data = null;
-
-        if (si == null && gu == null) {
-            try {
-                while ((data = fr.readLine()) != null) {
-                    String[] arr = data.split("\\s+");
-                    if (arr.length >= 3) {
-                        set.add(arr[0].trim());
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else if (gu == null) {
-            si = si.trim();
-            try {
-                while ((data = fr.readLine()) != null) {
-                    String[] arr = data.split("\\s+");
-                    if (arr.length >= 3 && arr[0].equals(si) && !arr[1].contains(arr[0])) {
+                if (si == null && gu == null) {
+                    if (arr.length >= 1) set.add(arr[0].trim());
+                } else if (gu == null) {
+                    if (arr.length >= 2 && arr[0].equals(si.trim()) && !arr[1].contains(arr[0])) {
                         set.add(arr[1].trim());
                     }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            si = si.trim();
-            gu = gu.trim();
-            try {
-                while ((data = fr.readLine()) != null) {
-                    String[] arr = data.split("\\s+");
-                    if (arr.length >= 3 && arr[0].equals(si) && arr[1].equals(gu) && !arr[0].equals(arr[1]) && !arr[2].contains(arr[1])) {
-                        if (arr.length > 3) {
-                            if (arr[3].contains(arr[1])) {
-                                continue;
-                            }
-                        }
+                } else {
+                    if (arr.length >= 3 && arr[0].equals(si.trim()) && arr[1].equals(gu.trim()) && !arr[2].contains(arr[1])) {
+                        if (arr.length > 3 && arr[3].contains(arr[1])) continue;
                         set.add(arr[2].trim());
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
         }
-        List<String> list = new ArrayList<String>(set);
+        return new ArrayList<>(set);
+    }
 
-        return list;
+    public List<String> sidoSelect1() {
+        return readSidoFile(null, null);
+    }
+
+    public List<String> sidoSelect2(String si, String gu) {
+        return readSidoFile(si, gu);
     }
 
     public String exchange1() {
-        Document doc = null;
-        List<List<String>> trlist = new ArrayList<List<String>>();
+        Document doc;
+        List<List<String>> trlist = new ArrayList<>();
         String url = "https://www.koreaexim.go.kr/wg/HPHKWG057M01";
-        String exdate = null;
+        String exdate = "";
 
         try {
             doc = Jsoup.connect(url).get();
-            Elements trs = doc.select("tr");
             exdate = doc.select("p.table-unit").html();
-
-            for (Element tr : trs) {
-                List<String> tdlist = new ArrayList<String>();
-                Elements tds = tr.select("td");
-                for (Element td : tds) {
+            for (Element tr : doc.select("tr")) {
+                List<String> tdlist = new ArrayList<>();
+                for (Element td : tr.select("td")) {
                     tdlist.add(td.html());
                 }
                 if (tdlist.size() > 0) {
-                    if (tdlist.get(0).equals("USD") || tdlist.get(0).equals("CNH") ||
-                            tdlist.get(0).equals("JPY(100)") || tdlist.get(0).equals("EUR")) {
+                    if ("USD".equals(tdlist.get(0)) || "CNH".equals(tdlist.get(0)) ||
+                            "JPY(100)".equals(tdlist.get(0)) || "EUR".equals(tdlist.get(0))) {
                         trlist.add(tdlist);
                     }
                 }
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<h4 class='title'> 수출입은행<br>" + exdate + "</h4>");
-        sb.append("<table class='table'>");
-        sb.append(
-                "<tr>"
-                        + "<th>통화</th>"
-                        + "<th>기준율</th>"
-                        + "<th>받으실때</th>"
-                        + "<th>보내실때</th>"
-                        + "</tr>"
-        );
-
+        sb.append("<h4 class='title'>수출입은행<br>").append(exdate).append("</h4>");
+        sb.append("<table class='table'><tr><th>통화</th><th>기준율</th><th>받으실때</th><th>보내실때</th></tr>");
         for (List<String> tds : trlist) {
-            sb.append(
-                    "<tr> "
-                            + "<td>" + tds.get(0) + "<br>" + tds.get(1) + "</td>"
-                            + "<td>" + tds.get(4) + "</td>");
-            sb.append(
-                    "<td>" + tds.get(2) + "</td>"
-                            + "<td>" + tds.get(3) + "</td>"
-            );
+            sb.append("<tr><td>").append(tds.get(0)).append("<br>").append(tds.get(1)).append("</td>")
+                    .append("<td>").append(tds.get(4)).append("</td>")
+                    .append("<td>").append(tds.get(2)).append("</td>")
+                    .append("<td>").append(tds.get(3)).append("</td></tr>");
         }
         sb.append("</table>");
-
         return sb.toString();
     }
 
     public Map<String, Object> exchange2() {
-        Document doc = null;
-        List<List<String>> trlist = new ArrayList<List<String>>();
+        Map<String, Object> map = new HashMap<>();
+        List<List<String>> trlist = new ArrayList<>();
         String url = "https://www.koreaexim.go.kr/wg/HPHKWG057M01";
-        String exdate = null;
 
         try {
-            doc = Jsoup.connect(url).get();
-            Elements trs = doc.select("tr");
-            exdate = doc.select("p.table-unit").html();
+            Document doc = Jsoup.connect(url).get();
+
+            String exdate = doc.select("p.date em").text();
+            map.put("exdate", exdate);
+
+            Elements trs = doc.select("div.table_wrap tbody tr");
 
             for (Element tr : trs) {
-                List<String> tdlist = new ArrayList<String>();
-                Elements tds = tr.select("td");
-                for (Element td : tds) {
-                    tdlist.add(td.html());
+                List<String> tdlist = new ArrayList<>();
+                for (Element td : tr.select("td")) {
+                    tdlist.add(td.text());
                 }
                 if (tdlist.size() > 0) {
-                    if (tdlist.get(0).equals("USD") || tdlist.get(0).equals("CNH") ||
-                            tdlist.get(0).equals("JPY(100)") || tdlist.get(0).equals("EUR")) {
+                    String currencyCode = tdlist.get(0).split("\\s+")[0];
+                    if ("USD".equals(currencyCode) || "CNH".equals(currencyCode) ||
+                            "JPY(100)".equals(currencyCode) || "EUR".equals(currencyCode)) {
                         trlist.add(tdlist);
                     }
                 }
             }
-        } catch(IOException e) {
+            map.put("trlist", trlist);
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("exdate", exdate);
-        map.put("trlist", trlist);
-
         return map;
     }
 
     public Map<String, Integer> graph1(String id) {
-        List<Map<String,Object>> list = boardRepository.graph1(id);
-        System.out.println("list :: "+list);
-        Map<String,Integer> map = new HashMap<>();
+        List<Map<String, Object>> list = boardRepository.graph1(id);
+        Map<String, Integer> map = new LinkedHashMap<>(); // 순서 보장을 위해 LinkedHashMap 사용
         for (Map<String, Object> m : list) {
-            String writer = (String)m.get("writer");
-            long cnt = (Long)m.get("cnt");
-            map.put(writer, (int)cnt);
+            map.put((String) m.get("writer"), ((Number) m.get("cnt")).intValue());
         }
+        return map;
+    }
 
+    public Map<String, Integer> graph2(String boardid) {
+        // 1. 날짜 범위 계산
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime sevenDaysAgo = today.minusDays(7).with(LocalTime.MIN); // 7일 전 00:00:00
+
+        // 2. Repository의 새로운 메서드 호출
+        List<Map<String, Object>> list = boardRepository.graph2(boardid, sevenDaysAgo, today);
+
+        // 3. 결과를 순서대로 담기 위해 LinkedHashMap 사용
+        Map<String, Integer> map = new LinkedHashMap<>();
+        for (Map<String, Object> m : list) {
+            String regdate = (String) m.get("day");
+            long cnt = (Long) m.get("cnt"); // Repository에서 Long 타입으로 반환될 수 있음
+            map.put(regdate, (int) cnt);
+        }
         return map;
     }
 
     public Map<String, Object> getLogo() {
-        Document doc = null;
+        Map<String, Object> map = new HashMap<>();
         String url = "https://gudi.kr";
-        String imgSrc = null;
         try {
-            doc = Jsoup.connect(url).get();
-            Elements el = doc.select("img.scroll_logo");
-            System.out.println("el : "+el);
-            imgSrc = el.first().attr("src"); //el의  src 내용(최초 1개)만 뽑음
-            System.out.println("imgSrc :: "+imgSrc);
-
-        }
-        catch(Exception e) {
+            Document doc = Jsoup.connect(url).get();
+            Element logoElement = doc.select("img.scroll_logo").first();
+            if (logoElement != null) {
+                map.put("img", logoElement.attr("src"));
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("img", imgSrc);
-        return map;
-    }
-    public Map<String, Integer> graph2(String boardid) {
-        List<Map<String,Object>> list = boardRepository.graph2(boardid);
-        System.out.println("dateList : "+list);
-        Map<String,Integer> map = new HashMap<>();
-        for (Map<String, Object> m : list) {
-            String regdate = (String)m.get("day");
-            long cnt = (Long)m.get("cnt");
-            map.put(regdate, (int)cnt);
-        }
-        System.out.println("map ::: "+map);
-
         return map;
     }
 }

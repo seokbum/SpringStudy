@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-@RequestMapping("naver")
+@RequestMapping("templates/naver")
 public class NaverController {
 	
 	@GetMapping("*")

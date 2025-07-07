@@ -1,218 +1,259 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>대시보드</title>
 
-    <style>
-        #piecontainer, #barcontainer {
-            width: 100%; /* 부모 .radio-toggle에 48%를 줬으므로 여기서는 100%로 채움 */
-            height: 250px; /* 명시적으로 높이 설정 */
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            padding: 0.5rem;
-            box-sizing: border-box;
-        }
-    </style>
-    <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
-    <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <th:block layout:fragment="css_js_head">
+        <style>
+            .chart-wrapper {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .chart-container {
+                flex: 1 1 45%;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                min-width: 300px;
+            }
+
+            #piecontainer, #barcontainer {
+                width: 100%;
+                height: 300px;
+                border: 1px solid #dee2e6;
+                border-radius: 0.25rem;
+                padding: 1rem;
+                box-sizing: border-box;
+                background-color: rgba(255, 255, 255, 0.7) !important;
+            }
+
+            .exchange-container {
+                width: 100%;
+                margin-top: 1rem;
+                padding: 1rem;
+                box-sizing: border-box;
+                background-color: rgba(255, 255, 255, 0.7) !important;
+                border-radius: 0.25rem;
+            }
+
+            .exchange-container table {
+                color: initial;
+            }
+
+            .btn-group {
+                width: 100%;
+            }
+
+            .btn-group .btn {
+                flex: 1;
+            }
+
+            .btn-group input[type="radio"] {
+                display: none;
+            }
+
+            .btn-group input[type="radio"]:checked + label {
+                background-color: #0d6efd;
+                color: white;
+            }
+
+            .btn-group label.btn-outline-primary {
+                color: #0d6efd;
+                border-color: #0d6efd;
+                background-color: rgba(255, 255, 255, 0.7);
+            }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+    </th:block>
 </head>
 <body>
-<div id="mainContent" class="main-content">
+
+<div layout:fragment="content">
     <div class="chart-wrapper">
-        <div class="radio-toggle">
+        <div class="chart-container">
             <div class="btn-group" role="group" aria-label="Pie chart selection">
-                <label class="btn btn-outline-primary active"> <input
-                        type="radio" name="pie" onchange="piegraph(2)" checked>
-                    자유게시판
-                </label> <label class="btn btn-outline-primary"> <input type="radio"
-                                                                        name="pie" onchange="piegraph(3)"> Q&A
-            </label>
+                <input type="radio" class="btn-check" name="pie" id="pieRadio1" onchange="piegraph(2)" checked>
+                <label class="btn btn-outline-primary" for="pieRadio1">자유게시판</label>
+
+                <input type="radio" class="btn-check" name="pie" id="pieRadio2" onchange="piegraph(3)">
+                <label class="btn btn-outline-primary" for="pieRadio2">Q&A</label>
             </div>
             <div id="piecontainer"></div>
         </div>
-        <div class="radio-toggle">
-            <div class="btn-group" role="group" aria-label="Pie chart selection">
-                <label class="btn btn-outline-primary active"> <input
-                        type="radio" name="barline" onchange="barlinegraph(2)" checked>
-                    자유게시판
-                </label> <label class="btn btn-outline-primary"> <input type="radio"
-                                                                        name="barline" onchange="barlinegraph(3)"> Q&A
-            </label>
+        <div class="chart-container">
+            <div class="btn-group" role="group" aria-label="Bar chart selection">
+                <input type="radio" class="btn-check" name="barline" id="barRadio1" onchange="barlinegraph(2)" checked>
+                <label class="btn btn-outline-primary" for="barRadio1">자유게시판</label>
+
+                <input type="radio" class="btn-check" name="barline" id="barRadio2" onchange="barlinegraph(3)">
+                <label class="btn btn-outline-primary" for="barRadio2">Q&A</label>
             </div>
             <div id="barcontainer"></div>
         </div>
+
+        <div id="exchange" class="exchange-container">
+        </div>
     </div>
+</div>
 
-    <script>
-        $(function() {
-            piegraph(2) //글쓴이별 게시글 건수를 파이그래프로출력
-            barlinegraph(2)
-        })
 
-        let randomColorFactor = function(){
-            return Math.round(Math.random()*255)
+<th:block layout:fragment="css_js_body">
+    <script th:inline="javascript">
+        $(function () {
+            piegraph(2);
+            barlinegraph(2);
+            exchangeRate2(); // 페이지 로드 시 환율 정보 함수 호출
+        });
+
+        // ★★★ 보내주신 JSP 파일의 코드로 교체된 부분 ★★★
+        function exchangeRate2() {
+            $.ajax({
+                url: "/ajax/exchange2",
+                success: function (json) {
+                    console.log(json);
+                    var html = '<h4 class="text-center mb-3">수출입은행<br>' + json.exdate + '</h4>';
+                    html += '<table class="table table-bordered table-sm me-2">';
+                    html += '<thead><tr>';
+                    html += '<th>통화</th>';
+                    html += '<th>기준율</th>';
+                    html += '<th>받으실때</th>';
+                    html += '<th>보내실때</th>';
+                    html += '</tr></thead>';
+                    html += '<tbody>';
+                    $.each(json.trlist, function (i, tds) {
+                        html += '<tr>';
+                        html += '<td>' + tds[0] + '<br>' + tds[1] + '</td>';
+                        html += '<td>' + tds[4] + '</td>';
+                        html += '<td>' + tds[2] + '</td>';
+                        html += '<td>' + tds[3] + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody>';
+                    html += '</table>';
+                    $("#exchange").html(html);
+                },
+                error: function (e) {
+                    alert("환율 조회 오류: " + e.status);
+                }
+            });
         }
 
-        let randomColor = function(opa){
-            return "rgba("+randomColorFactor()+","
-                +randomColorFactor()+","
-                +randomColorFactor()+","
-                +(opa || ".3") + ")";
-        } //각각의 색깔
+        // --- 기존 차트 관련 코드는 그대로 유지 ---
+        let randomColorFactor = function () {
+            return Math.round(Math.random() * 255)
+        }
 
-        function piegraph(id){
-            $.ajax("../ajax/graph1?id="+id,{
-                success : function(json){
-                    // 캔버스 생성 시 높이 속성 추가
-                    let canvas = "<canvas id='canvas1' style='width:100%; height:100%;'></canvas>"; // 캔버스 높이 직접 지정 (예: 100px)
+        let randomColor = function (opa) {
+            return "rgba(" + randomColorFactor() + "," + randomColorFactor() + "," + randomColorFactor() + "," + (opa || ".3") + ")";
+        }
+
+        function piegraph(id) {
+            $.ajax("../ajax/graph1?id=" + id, {
+                success: function (json) {
+                    let canvas = "<canvas id='canvas1' style='width:100%; height:100%;'></canvas>";
                     $("#piecontainer").html(canvas);
-                    console.log(json);
-                    pieGraphPrint(json,id);
+                    pieGraphPrint(json, id);
                 },
-                error : function(e){
-                    alert("서버오류 : "+e.status);
+                error: function (e) {
+                    alert("서버오류 : " + e.status);
                 }
             })
         }
 
-        function pieGraphPrint(arr,id){
-//arr : [{장원영:10},{안유진:20},....]
+        function pieGraphPrint(arr, id) {
             let colors = [];
             let writers = [];
             let datas = [];
-            $.each(arr,function(index){
-                colors[index] = randomColor(0.5);
-                for(key in arr[index]){
-                    writers.push(key); // key값(writer)
-                    datas.push(arr[index][key]); //각map의 value(cnt)
+            $.each(arr, function (index, item) {
+                for (let key in item) {
+                    colors.push(randomColor(0.7));
+                    writers.push(key);
+                    datas.push(item[key]);
                 }
-            })
-            let title = (id == 2)?"자유게시판":"Q&A";
-            let config = {
-                type:'pie',
-                data : {
-                    datasets : [{ data:datas,
-                        backgroundColor : colors}],
-                    labels : writers
-                },
-                options : {
-                    responsive : true,
-                    maintainAspectRatio: false, // 가로-세로 비율 유지를 비활성화합니다.
-                    legend : {
-                        display:true,
-                        position:"right",
-                        labels: {
-                            boxWidth: 15, // 범례 상자의 너비를 더 줄입니다.
-                            padding: 5   // 범례 항목 간의 간격을 더 줄입니다.
-                        }
-                    },
-                    title : {
-                        display : true,
-                        text : '글쓴이 별 '+title+"등록건수",
-                        position : 'bottom',
-                        fontSize: 10 // 제목 글씨 크기를 더 줄입니다.
-                    },
-                    layout: {
-                        padding: {
-                            left: 5, // 그래프 내부 여백을 더 줄입니다.
-                            right: 5,
-                            top: 5,
-                            bottom: 5
-                        }
-                    },
-                    elements: {
-                        arc: {
-                            borderWidth: 0 // 조각의 테두리를 제거하여 시각적으로 더 작게 보이게 할 수 있습니다.
-                        }
+            });
+            let title = (id == 2) ? "자유게시판" : "Q&A";
+            new Chart(document.getElementById("canvas1").getContext('2d'), {
+                type: 'pie',
+                data: {labels: writers, datasets: [{data: datas, backgroundColor: colors}]},
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    legend: {display: true, position: "right", labels: {fontColor: 'white', boxWidth: 15, padding: 5}},
+                    title: {
+                        display: true,
+                        text: '글쓴이 별 ' + title + "등록건수",
+                        position: 'bottom',
+                        fontSize: 12,
+                        fontColor: 'white'
                     }
                 }
-            }
-            let ctx = document.getElementById("canvas1")
-            new Chart(ctx,config)
+            });
         }
 
-
-        function barlinegraph(id){
-            $.ajax("../ajax/graph2?id="+id,{
-                success : function(arr){
-                    // 캔버스 생성 시 높이 속성 추가
-                    let canvas = "<canvas id='canvas2' style='width:100%; height:100%;'></canvas>"; // 캔버스 높이 직접 지정 (예: 100px)
+        function barlinegraph(id) {
+            $.ajax("../ajax/graph2?id=" + id, {
+                success: function (arr) {
+                    let canvas = "<canvas id='canvas2' style='width:100%; height:100%;'></canvas>";
                     $("#barcontainer").html(canvas);
-                    console.log(arr)
-                    barlinGraphPrint(arr,id);
+                    barlinGraphPrint(arr, id);
                 },
-                error : function(e){
-                    alert("서버오류 : "+e.status);
+                error: function (e) {
+                    alert("서버오류 : " + e.status);
                 }
             })
         }
 
-        function barlinGraphPrint(arr,id){
+        function barlinGraphPrint(arr, id) {
             let colors = [];
             let regdates = [];
             let datas = [];
-            $.each(arr,function(index){
-                colors[index] = randomColor(0.5)
-                for(key in arr[index]){
+            $.each(arr, function (index, item) {
+                for (let key in item) {
+                    colors.push(randomColor(0.7));
                     regdates.push(key);
-                    datas.push(arr[index][key])
+                    datas.push(item[key]);
                 }
-            })
-            let title = (id==2)?"자유게시판":"Q&A";
-            let config = {
-                type:'bar',
-                data:{
-                    datasets:[
+            });
+            let title = (id == 2) ? "자유게시판" : "Q&A";
+            new Chart(document.getElementById("canvas2").getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: regdates,
+                    datasets: [
                         {
-                            type:"line",
-                            borderWidth:2,
-                            borderColor:colors,
-                            label:'건수',
-                            fill:false,
-                            data:datas
+                            type: "line",
+                            borderWidth: 2,
+                            borderColor: 'rgba(255, 99, 132, 0.8)',
+                            label: '건수',
+                            fill: false,
+                            data: datas
                         },
-                        {
-                            type:"bar",
-                            backgroundColor:colors,
-                            label : '건수',
-                            data : datas
-                        }
-                    ],
-                    labels : regdates,
+                        {type: "bar", backgroundColor: colors, label: '건수', data: datas}
+                    ]
                 },
-                options : {
-                    responsive : true,
-                    legend : {display:false},
-                    title:{
-                        display :true,
-                        text : '최근7일'+title+"등록건수",
-                        position : 'bottom'
-                    },
-                    scales:{
-                        xAxes : [{ display : true,
-                            scaleLabel : {
-                                display : true,
-                                labelString : "작성일자"
-                            }
+                options: {
+                    responsive: true, maintainAspectRatio: false, legend: {display: false},
+                    title: {display: true, text: '최근 7일 ' + title + " 등록건수", position: 'bottom', fontColor: 'white'},
+                    scales: {
+                        xAxes: [{
+                            ticks: {fontColor: 'white'},
+                            display: true,
+                            scaleLabel: {display: true, labelString: "작성일자", fontColor: 'white'}
                         }],
-                        yAxes : [{
-                            scaleLabel : {
-                                display : true,
-                                labelString : "게시물 등록 건수"
-                            },
-                            ticks : {begenAtZero : true}
+                        yAxes: [{
+                            ticks: {beginAtZero: true, fontColor: 'white'},
+                            scaleLabel: {display: true, labelString: "게시물 등록 건수", fontColor: 'white'}
                         }]
-
                     }
                 }
-            }
-            let ctx = document.getElementById("canvas2")
-            new Chart(ctx,config)
+            });
         }
     </script>
+</th:block>
+
 </body>
 </html>

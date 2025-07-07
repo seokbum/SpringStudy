@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>네이버 검색</title>
+    <style>
+        /* 검색 결과 스타일 */
+        #result .card {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            color: #333;
+            border: none;
+        }
+        #result .card-title a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        #result .card-title a:hover {
+            text-decoration: underline;
+        }
+        #result .card-text {
+            color: #555;
+        }
+        #result img.thumbnail {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container mt-4">
+        <h4 class="text-white mb-4"><i class="fas fa-search"></i> 네이버 통합 검색</h4>
+        <div class="card p-3 mb-4" style="background-color: rgba(255,255,255,0.7) !important;">
+            <form id="searchForm" onsubmit="event.preventDefault(); naversearch(1);">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label for="type" class="form-label fw-bold">검색 유형</label>
+                        <select id="type" class="form-select">
+                            <option value="blog">블로그</option>
+                            <option value="news">뉴스</option>
+                            <option value="book">책</option>
+                            <option value="encyc">백과사전</option>
+                            <option value="cafearticle">카페글</option>
+                            <option value="kin">지식인</option>
+                            <option value="local">지역</option>
+                            <option value="webkr">웹문서</option>
+                            <option value="image">이미지</option>
+                            <option value="shop">쇼핑</option>
+                            <option value="doc">전문자료</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="display" class="form-label fw-bold">결과 수</label>
+                        <select id="display" class="form-select">
+                            <option>10</option>
+                            <option>20</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="data" class="form-label fw-bold">검색어</label>
+                        <input type="text" id="data" class="form-control" placeholder="검색어를 입력하세요">
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button type="submit" class="btn btn-primary">검색</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div id="result"></div>
+    </div>
+</div>
+
+<th:block layout:fragment="css_js_body">
+    <script type="text/javascript">
+        function renderPagination(start, total, display) {
+            if (total === 0) return '';
+
+            let maxpage = Math.ceil(total / display);
+            let startpage = Math.floor((start - 1) / 10) * 10 + 1;
+            let endpage = Math.min(startpage + 9, maxpage);
+
+            let html = '<nav class="mt-4"><ul class="pagination justify-content-center">';
+
+            // 이전 페이지
+            if (start > 1) {
+                html += `<li class="page-item"><a class="page-link" href="javascript:naversearch(${start - 1})">이전</a></li>`;
+            } else {
+                html += '<li class="page-item disabled"><a class="page-link" href="#">이전</a></li>';
+            }
+
+            // 페이지 번호
+            for (let i = startpage; i <= endpage; i++) {
+                html += `<li class="page-item ${i === start ? 'active' : ''}"><a class="page-link" href="javascript:naversearch(${i})">${i}</a></li>`;
+            }
+
+            // 다음 페이지
+            if (start < maxpage) {
+                html += `<li class="page-item"><a class="page-link" href="javascript:naversearch(${start + 1})">다음</a></li>`;
+            } else {
+                html += '<li class="page-item disabled"><a class="page-link" href="#">다음</a></li>';
+            }
+
+            html += '</ul></nav>';
+            return html;
+        }
+
+        function naversearch(start) {
+            let query = $("#data").val().trim();
+            if (!query) {
+                $("#result").html('<div class="alert alert-warning">검색어를 입력해주세요.</div>');
+                return;
+            }
+            $.ajax({
+                type: 'post',
+                url: '/naver/naversearch',
+                data: {
+                    data: query,
+                    display: $("#display").val(),
+                    start: start,
+                    type: $("#type").val()
+                },
+                success: function(json) {
+                    if (!json.total || json.items.length === 0) {
+                        $("#result").html('<div class="alert alert-info mt-4">검색 결과가 없습니다.</div>');
+                        return;
+                    }
+
+                    let total = parseInt(json.total);
+                    let display = parseInt($("#display").val());
+
+                    let html = `<p class="text-white small mt-4">전체 ${total.toLocaleString()}건</p>`;
+
+                    if ($("#type").val() === 'image') {
+                        html += '<div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3">';
+                        $.each(json.items, function(i, item) {
+                            html += '<div class="col">';
+                            html += '  <div class="card h-100">';
+                            html += `    <a href="${item.link}" target="_blank"><img src="${item.thumbnail}" class="card-img-top thumbnail" alt="${item.title}"></a>`;
+                            html += '    <div class="card-body p-2">';
+                            html += `      <small class="card-text d-block text-truncate">${item.title.replace(/<[^>]*>?/gm, '')}</small>`;
+                            html += '    </div>';
+                            html += '  </div>';
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    } else {
+                        html += '<div class="list-group">';
+                        $.each(json.items, function(i, item) {
+                            html += '<div class="list-group-item mb-3 card">';
+                            html += '  <div class="card-body">';
+                            html += `    <h5 class="card-title"><a href="${item.link}" target="_blank">${item.title.replace(/<[^>]*>?/gm, '')}</a></h5>`;
+                            html += `    <p class="card-text">${item.description.replace(/<[^>]*>?/gm, '')}</p>`;
+                            if(item.bloggername) html += `<small class="text-muted">${item.bloggername}</small>`;
+                            if(item.postdate) html += `<small class="text-muted ms-2">${item.postdate}</small>`;
+                            html += '  </div>';
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    html += renderPagination(start, total, display);
+                    $("#result").html(html);
+                },
+                error: (xhr) => $("#result").html(`<div class="alert alert-danger mt-4">검색 중 오류 발생: ${xhr.statusText}</div>`)
+            });
+        }
+    </script>
+</th:block>
+</body>
+</html>

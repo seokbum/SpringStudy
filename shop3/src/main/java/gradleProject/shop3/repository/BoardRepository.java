@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,9 +31,12 @@ public interface BoardRepository extends JpaRepository<Board, Integer>, JpaSpeci
             " group by b.writer order by cnt DESC")
     List<Map<String, Object>> graph1(String id);
 
-    @Query(value = "select date_format(coalesce(b.regdate, now()), '%Y-%m-%d') as day, count(*) as cnt " +
-            "from Board b where b.boardid = :boardid " +
-            "group by date_format(coalesce(b.regdate, now()), '%Y-%m-%d') " +
-            "order by day desc limit 7", nativeQuery = true)
-    List<Map<String, Object>> graph2(@Param("boardid") String boardid);
+    @Query("SELECT FUNCTION('DATE_FORMAT', b.regdate, '%Y-%m-%d') as day, COUNT(b) as cnt " +
+            "FROM Board b " +
+            "WHERE b.boardid = :boardid AND b.regdate BETWEEN :startDate AND :endDate " +
+            "GROUP BY day " +
+            "ORDER BY day ASC")
+    List<Map<String, Object>> graph2(@Param("boardid") String boardid,
+                                     @Param("startDate") LocalDateTime startDate,
+                                     @Param("endDate") LocalDateTime endDate);
 }

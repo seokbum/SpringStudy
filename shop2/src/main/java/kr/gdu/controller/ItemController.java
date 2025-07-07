@@ -1,26 +1,20 @@
 package kr.gdu.controller;
 
-import java.util.List;
-
-
-
-import javax.validation.Valid;
-
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import kr.gdu.logic.Item;
+import kr.gdu.service.ShopService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-import jakarta.servlet.http.HttpServletRequest;
-import kr.gdu.logic.Item;
-import kr.gdu.service.ShopService;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("item") // http://localhost:8080/shop1/item
@@ -67,7 +61,7 @@ public class ItemController {
 	//valid : 유효성검사
 	//BindingResult : error를 담고있는 객체
 	public ModelAndView register(@Valid Item item, BindingResult bresult,
-			HttpServletRequest request) {
+								 HttpServletRequest request) {
 		ModelAndView mav = new ModelAndView();
 		if(bresult.hasErrors()) { //입력값 검증 오류발생 시 
 			return mav;
